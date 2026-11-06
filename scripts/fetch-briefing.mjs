@@ -75,6 +75,30 @@ async function dinsNotams(icao) {
   return [...html.matchAll(/<pre[^>]*>([\s\S]*?)<\/pre>/gi)].map(m => decode(m[1].replace(/<[^>]+>/g, '')).trim()).filter(Boolean);
 }
 
+// runways with true headings from OurAirports, same shape the page uses: { ends: [{ n, hdg }], ids: ['09/27'] }
+const csvLine = l => { const f = []; let cur = '', q = false;
+  for (let i = 0; i < l.length; i++) { const c = l[i];
+    if (q) { if (c === '"') { if (l[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += c; }
+    else if (c === '"') q = true; else if (c === ',') { f.push(cur); cur = ''; } else cur += c; }
+  f.push(cur.replace(/\r$/, '')); return f; };
+let oaCsv = null;
+async function runways(icao) {
+  oaCsv ??= await get('https://davidmegginson.github.io/ourairports-data/runways.csv');
+  const ends = [], ids = [];
+  for (const line of oaCsv.split('\n')) {
+    if (!line.includes(`,"${icao}",`)) continue;
+    const f = csvLine(line); if (f[2] !== icao || f[7] === '1') continue;
+    const pair = [];
+    for (const [id, h] of [[f[8], f[12]], [f[14], f[18]]]) {
+      const n = String(id || '').trim().toUpperCase(); if (!/^\d{1,2}[LRC]?$/.test(n)) continue;
+      const hdg = h !== '' && isFinite(+h) ? +h : parseInt(n, 10) * 10;
+      pair.push(n); ends.push({ n, hdg: Math.round(hdg) % 360 });
+    }
+    if (pair.length) ids.push(pair.join('/'));
+  }
+  return { ends, ids };
+}
+
 await mkdir('data', { recursive: true });
 let failures = 0;
 for (const icao of icaos) {
@@ -89,13 +113,14 @@ for (const icao of icaos) {
       get(`https://aviationweather.gov/api/data/taf?ids=${icao}&format=raw`)]);
     d.metar = m.trim(); d.taf = t.trim().replace(/[ \t]*\n[ \t]*/g, '\n'); d.wxUpdated = now;
   } catch (e) { failures++; console.error(icao, 'weather:', e.message); }
+  try { d.runways = await runways(icao); } catch (e) { console.error(icao, 'runways:', e.message); }
   let list = null;
   for (const [name, fn] of [['autorouter.aero', autorouterNotams], ['FAA NOTAM Search', faaNotams], ['FAA DINS', dinsNotams]]) {
     try { list = await fn(icao); d.notamSource = name; break; } catch (e) { console.error(icao, name + ':', e.message); }
   }
   if (list) { d.notam = list.join('\n\n'); d.notamOk = true; d.notamUpdated = now; }
   else failures++;
-  console.log(icao, `metar ${d.metar ? 'ok' : '-'}, taf ${d.taf ? 'ok' : '-'}, notams ${list ? list.length + ' via ' + d.notamSource : 'failed'}`);
+  console.log(icao, `runways ${d.runways ? d.runways.ids.join(' ') || 'none' : '-'}, metar ${d.metar ? 'ok' : '-'}, taf ${d.taf ? 'ok' : '-'}, notams ${list ? list.length + ' via ' + d.notamSource : 'failed'}`);
   await writeFile(file, JSON.stringify(d, null, 1) + '\n');
 }
 if (failures === icaos.length * 2) process.exit(1);

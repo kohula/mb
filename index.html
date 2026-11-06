@@ -128,6 +128,8 @@ code{font-size:.9em;background:var(--field);border:1px solid var(--line);border-
 .wt p{margin:0}
 .wt td.dg{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cline x1='100' y1='0' x2='0' y2='100' stroke='black' stroke-width='2' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");background-size:100% 100%;background-repeat:no-repeat}
 .wt .v{font-weight:700}
+.wt p.ck{display:flex;align-items:center;justify-content:space-between;gap:12pt}
+.wt p.ck .bx{flex:none;width:22pt;height:22pt;border:2.25pt solid #000;margin-right:6pt}
 .logoRow{position:relative;height:40.29pt}
 .logoRow img{position:absolute;left:41.31pt;top:13.14pt;width:261.75pt;height:157.65pt}
 .mbchart{position:absolute}
@@ -381,7 +383,7 @@ code{font-size:.9em;background:var(--field);border:1px solid var(--line);border-
           <label class="f">C172 max crosswind (kt) <input data-s="xwC172" inputmode="decimal"></label>
           <label class="f">C152 max crosswind (kt) <input data-s="xwC152" inputmode="decimal"></label>
         </div>
-        <label class="f" style="margin-top:10px">Runways, one airfield per line (e.g. LHBS 09/27) <textarea data-s="runways" style="min-height:4.5em"></textarea></label>
+        <label class="f" style="margin-top:10px">Runways for airfields not found online, one per line (e.g. LHBS 09/27) <textarea data-s="runways" style="min-height:4.5em"></textarea></label>
         <label class="f" style="margin-top:10px">Navlog frequencies, one per line (5 lines) <textarea data-s="freqs" style="min-height:7em"></textarea></label>
         <div class="row" style="margin-top:10px">
           <span class="hint" style="margin:0">Logo on the front page:</span>
@@ -623,12 +625,51 @@ function rwyMap(){
   return m;
 }
 const rwyEnds=list=>[...new Set(String(list||'').toUpperCase().split(/[,;\s]+/).flatMap(p=>p.split('/')).map(s=>s.trim()).filter(s=>/^\d{1,2}[LRC]?$/.test(s)&&+s.replace(/\D/g,'')>=1&&+s.replace(/\D/g,'')<=36))];
-// which airfield's runways: the departure airfield, else the weather station
+// Runway headings from the internet (OurAirports, true headings): first the site's data/ICAO.json
+// (written by the GitHub Action), then the OurAirports runway list itself. Cached per airfield for 30 days.
+const OA_RUNWAYS='https://davidmegginson.github.io/ourairports-data/runways.csv';
+const ONLINE={}, rwyPending={}; let oaCsv=null;
+function csvLine(l){const f=[];let cur='',q=false;for(let i=0;i<l.length;i++){const c=l[i];if(q){if(c==='"'){if(l[i+1]==='"'){cur+='"';i++}else q=false}else cur+=c}else if(c==='"')q=true;else if(c===','){f.push(cur);cur=''}else cur+=c}f.push(cur.replace(/\r$/,''));return f}
+function oaRunways(csv,icao){
+  const out=[], key=`,"${icao}",`; let i=0;
+  while((i=csv.indexOf(key,i))!==-1){
+    const st=csv.lastIndexOf('\n',i)+1, en=csv.indexOf('\n',i), f=csvLine(csv.slice(st,en<0?csv.length:en)); i=en<0?csv.length:en;
+    if(f[2]!==icao||f[7]==='1')continue;
+    const pair=[];
+    for(const [id,h] of [[f[8],f[12]],[f[14],f[18]]]){
+      const n=String(id||'').trim().toUpperCase(); if(!/^\d{1,2}[LRC]?$/.test(n))continue;
+      const hdg=num(h)??parseInt(n,10)*10; pair.push(n); out.push({n,hdg:Math.round(hdg)%360});
+    }
+    if(pair.length)out.ids=(out.ids||[]).concat(pair.join('/'));
+  }
+  return {ends:out.slice(),ids:out.ids||[]};
+}
+function loadRunways(icao){
+  icao=(icao||'').trim().toUpperCase();
+  if(!/^[A-Z0-9]{4}$/.test(icao)||icao in ONLINE||rwyPending[icao])return;
+  const c=LS.get('mb-rwy-'+icao); if(c&&c.v&&Date.now()-c.t<30*864e5){ONLINE[icao]=c.v;return}
+  rwyPending[icao]=(async()=>{
+    let v=null;
+    try{const d=await siteData(icao); if(d&&d.runways&&Array.isArray(d.runways.ends))v=d.runways}catch(e){}
+    if(!v){
+      try{ if(!oaCsv)oaCsv=getText(OA_RUNWAYS,60000); v=oaRunways(await oaCsv,icao) }
+      catch(e){ oaCsv=null; delete rwyPending[icao]; return }  // offline: try again later
+    }
+    ONLINE[icao]=v; LS.set('mb-rwy-'+icao,{t:Date.now(),v}); delete rwyPending[icao];
+    syncControls(); render();
+  })();
+}
+const endsFromText=t=>rwyEnds(t).map(n=>({n,hdg:parseInt(n,10)*10%360}));
+// which airfield's runways: the departure airfield, else the weather station.
+// Order: typed on the weather card, then found online, then the Settings list.
 function rwyFor(){
   const m=rwyMap(), dep=(S.dep||'').trim().toUpperCase(), wx=(S.wxIcao||'').trim().toUpperCase();
-  const at=m[dep]?dep:m[wx]?wx:(dep||wx);
-  const saved=m[at]||'';
-  return {at, saved, list:(S.rwy||'').trim()||saved};
+  const has=i=>i&&((ONLINE[i]&&ONLINE[i].ends.length)||m[i]);
+  const at=has(dep)?dep:has(wx)?wx:(dep||wx), o=ONLINE[at];
+  const typed=(S.rwy||'').trim();
+  const known=o&&o.ends.length?{ends:o.ends,ids:o.ids.join(' '),src:'OurAirports'}:m[at]?{ends:endsFromText(m[at]),ids:m[at],src:'Settings'}:{ends:[],ids:'',src:''};
+  if(typed)return {at,ends:endsFromText(typed),src:'typed',known};
+  return {at,...known,known,loading:!!rwyPending[at]};
 }
 function windInfo(){
   const m=(S.metar||'').toUpperCase().match(/\b(\d{3}|VRB)(\d{2,3})(?:G(\d{2,3}))?(KT|MPS)\b/);
@@ -638,9 +679,8 @@ function windInfo(){
   const W={dir:m[1],spd,gst,lim,vr:vr?[vr[1],vr[2]]:null,rw:[]};
   if(m[1]==='VRB'||spd===0)return W;
   const dir=+m[1];
-  const ends=rwyEnds(rwyFor().list);
-  for(const n of ends){
-    const hdg=parseInt(n,10)*10, a=(dir-hdg)*Math.PI/180;
+  for(const {n,hdg} of rwyFor().ends){
+    const a=(dir-hdg)*Math.PI/180;
     const xc=Math.abs(Math.max(spd,gst)*Math.sin(a));
     W.rw.push({n,head:spd*Math.cos(a),cross:Math.abs(spd*Math.sin(a)),gcross:gst?Math.abs(gst*Math.sin(a)):0,xc});
   }
@@ -648,18 +688,20 @@ function windInfo(){
   return W;
 }
 function roseSVG(W){
-  const ends=rwyEnds(rwyFor().list), r=46;
+  const ends=rwyFor().ends, r=46;
   const P=(deg,rad)=>[Math.sin(deg*Math.PI/180)*rad, -Math.cos(deg*Math.PI/180)*rad];
   let s=`<circle r="${r}" fill="var(--field)" stroke="var(--line)"/>`;
   for(let d=0;d<360;d+=30){const [x1,y1]=P(d,r-(d%90?3:6)),[x2,y2]=P(d,r);s+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="var(--muted)" stroke-width="${d%90?1:1.6}"/>`}
   for(const [t,d] of [['N',0],['E',90],['S',180],['W',270]]){const [x,y]=P(d,r+8);s+=`<text x="${x.toFixed(1)}" y="${(y+3.5).toFixed(1)}" font-size="10" font-weight="700" text-anchor="middle" fill="var(--muted)">${t}</text>`}
   // runways: one strip per pair, numbers at each end
+  // parallel runways (L/R) are drawn side by side; L is left when landing in that direction
+  const off=e=>/L$/.test(e.n)?-6:/R$/.test(e.n)?6:0;
   const done=new Set();
-  for(const n of ends){
-    const h=parseInt(n,10)*10%180; if(done.has(h))continue; done.add(h);
-    s+=`<g transform="rotate(${h})"><rect x="-4" y="-30" width="8" height="60" rx="1.5" fill="var(--muted)" opacity=".55"/><line x1="0" y1="-26" x2="0" y2="26" stroke="var(--panel)" stroke-width="1" stroke-dasharray="4 3"/></g>`;
+  for(const e of ends){
+    const k=Math.round(e.hdg%180)+'|'+off(e)*(e.hdg%360<180?1:-1); if(done.has(k))continue; done.add(k);
+    s+=`<g transform="rotate(${e.hdg})"><rect x="${off(e)-3.5}" y="-30" width="7" height="60" rx="1.5" fill="var(--muted)" opacity=".55"/><line x1="${off(e)}" y1="-26" x2="${off(e)}" y2="26" stroke="var(--panel)" stroke-width="1" stroke-dasharray="4 3"/></g>`;
   }
-  for(const n of ends){const d=parseInt(n,10)*10,[x,y]=P(d+180,37);s+=`<text x="${x.toFixed(1)}" y="${(y+3).toFixed(1)}" font-size="8" font-weight="700" text-anchor="middle" fill="var(--ink)">${esc(n)}</text>`}
+  for(const e of ends){const [x0,y0]=P(e.hdg+180,37),[ox,oy]=P(e.hdg+90,off(e));s+=`<text x="${(x0+ox).toFixed(1)}" y="${(y0+oy+3).toFixed(1)}" font-size="${e.n.length>2?7:8}" font-weight="700" text-anchor="middle" fill="var(--ink)">${esc(e.n)}</text>`}
   if(W.vr){const a=+W.vr[0],b=+W.vr[1],[x1,y1]=P(a,r-2),[x2,y2]=P(b,r-2),span=((b-a)+360)%360;s+=`<path d="M${x1.toFixed(1)} ${y1.toFixed(1)}A${r-2} ${r-2} 0 ${span>180?1:0} 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" fill="none" stroke="var(--accent)" stroke-width="3" opacity=".45"/>`}
   if(W.dir!=='VRB'&&W.spd>0){
     // arrow blowing from the wind direction towards the centre
@@ -684,10 +726,11 @@ function renderWind(){
       const over=W.lim&&x.xc>W.lim, hw=x.head>=0?`${Math.round(x.head)} kt head`:`${Math.round(-x.head)} kt TAIL`;
       h+=`<div><span>RWY ${esc(x.n)}</span><b class="${over?'bad':x===W.best?'good':''}">${hw}, ${Math.round(x.cross)} kt cross${W.gst?` (${Math.round(x.gcross)} in gusts)`:''}${x===W.best?' · favoured':''}${over?` · above ${W.lim} kt`:''}</b></div>`;
     }
-    if(!W.rw.length)h+=`<div><span>Runway</span><b>Type the runways below</b></div>`;
+    if(!W.rw.length)h+=`<div><span>Runway</span><b>${rwyFor().loading?'Looking up the runways…':'Type the runways below'}</b></div>`;
   }
-  const wx=(S.wxIcao||'').trim().toUpperCase(), at=rwyFor().at;
-  h+=`<small>${W.rw.length&&wx&&at&&wx!==at?`${esc(wx)} wind applied to ${esc(at)} runways. `:''}${W.lim?`${TYPES[S.type].label} max demonstrated crosswind ${W.lim} kt.`:''}</small>`;
+  const wx=(S.wxIcao||'').trim().toUpperCase(), rf=rwyFor(), at=rf.at;
+  const srcTxt={OurAirports:'Runway headings from OurAirports. ',Settings:'Runways from Settings. ',typed:'Runways as typed. '}[rf.src]||'';
+  h+=`<small>${W.rw.length&&wx&&at&&wx!==at?`${esc(wx)} wind applied to ${esc(at)} runways. `:''}${W.rw.length?srcTxt:''}${W.lim?`${TYPES[S.type].label} max demonstrated crosswind ${W.lim} kt.`:''}</small>`;
   box.innerHTML=h;
 }
 // "ddhhmmZ" -> time in ms, assuming the latest such time not in the future
@@ -760,11 +803,19 @@ function clubText(root){
   }
 }
 
+// checklist under the navlog: label on the left, a drawn box at the right edge, so every box lines up
+function alignChecklist(root){
+  for(const p of root.querySelectorAll('table[data-t="check"] p')){
+    const t=p.textContent; if(!t.includes('□'))continue;
+    const label=t.split('□')[0].replace(/\s+/g,' ').trim().replace(/^F\s*l?\s*ightplan$/i,'Flightplan');
+    p.className='ck'; p.innerHTML=`<span>${esc(label)}</span><span class="bx"></span>`;
+  }
+}
 function buildFront(R){
   const T=R.T, F=FR[S.type], rw=T.rows, ac=R.ac;
   const el=document.createElement('section'); el.className='sheet';
   el.innerHTML=`<div class="sheetin"><div class="col l">${FR.navlog}<div class="logoRow">${logoHTML()}</div>${F.check}</div><div class="col r">${F.mb}</div></div>`;
-  clubText(el);
+  clubText(el); alignChecklist(el);
   const cs=ac?ac.cs:'';
   // ---- M&B header
   setCell(el,'mb',5,0,S.pic,true); setCell(el,'mb',5,1,S.student,true); setCell(el,'mb',5,2,dof(S.date),true);
@@ -913,7 +964,9 @@ function syncControls(){
   $('rlenSeg').hidden=!rounds; $('wRounds').hidden=!rounds;
   $('mfuel').placeholder=FP.gal==null?'':String(+fmt(fromGal(FP.gal,S.mfuelU,T),1));
   $('mtrip').placeholder=FP.trip==null?'':String(+fmt(fromGal(FP.trip,S.mtripU,T),1));
-  const rf=rwyFor(); $('lblRwy').textContent=`Runways at ${rf.at||'the airfield'}`; $('rwy').placeholder=rf.saved||'e.g. 09/27';
+  loadRunways(S.dep); loadRunways(S.wxIcao);
+  const rf=rwyFor(); $('lblRwy').textContent=`Runways at ${rf.at||'the airfield'}`;
+  $('rwy').placeholder=rf.known.ids?`${rf.known.ids} (${rf.known.src==='OurAirports'?'found online':'from Settings'})`:rf.loading?'looking up…':'e.g. 09/27';
   $('notamLinks').innerHTML=`<a href="https://notams.aim.faa.gov/notamSearch/" target="_blank" rel="noopener">Open FAA NOTAM Search</a>`;
   $('wxLinks').innerHTML=`<a href="https://aviationweather.gov/data/metar/?ids=${encodeURIComponent((S.wxIcao||'').toUpperCase())}&taf=1" target="_blank" rel="noopener">Open ${esc((S.wxIcao||'').toUpperCase())} on aviationweather.gov</a>`;
   for(const el of document.querySelectorAll('[data-n]')){
@@ -1101,8 +1154,8 @@ $('setReset').onclick=()=>{
 /* ------------------------------------------------------------------ automatic lookups (METAR, TAF, NOTAM) */
 // aviationweather.gov and the FAA NOTAM services do not allow direct browser requests (no CORS), so the chain is:
 // own lookup server -> data/ICAO.json kept fresh by the GitHub Action -> CORS-enabled public sources -> public relay.
-async function getText(url){
-  const ctl=new AbortController(), t=setTimeout(()=>ctl.abort(),12000);
+async function getText(url,ms=12000){
+  const ctl=new AbortController(), t=setTimeout(()=>ctl.abort(),ms);
   try{const r=await fetch(url,{cache:'no-store',signal:ctl.signal});if(!r.ok)throw new Error('HTTP '+r.status);return await r.text()}
   finally{clearTimeout(t)}
 }

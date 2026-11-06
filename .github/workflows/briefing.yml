@@ -19,6 +19,9 @@ jobs:
         with:
           node-version: 20
       - run: node scripts/fetch-briefing.mjs
+        env:
+          AUTOROUTER_USER: ${{ secrets.AUTOROUTER_USER }}
+          AUTOROUTER_PASS: ${{ secrets.AUTOROUTER_PASS }}
       - name: Commit changes
         run: |
           git config user.name 'github-actions[bot]'

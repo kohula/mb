@@ -1,7 +1,7 @@
 // Optional lookup server for the Fly-Coop M&B sheet (Cloudflare Worker, free plan is enough).
 // Deploy: Cloudflare dashboard > Workers & Pages > Create > Hello World > paste this file > Deploy.
 // Then paste the worker URL (e.g. https://mb-lookup.yourname.workers.dev/) into
-// "Lookup settings > Own lookup server URL" in the app.
+// "Settings > NOTAM and weather lookup > Own lookup server URL" in the app.
 // Usage: GET /?type=metar|taf|notam&icao=LHBP   -> plain text, CORS enabled.
 const CORS = { 'access-control-allow-origin': '*', 'content-type': 'text/plain; charset=utf-8' };
 const UA = { 'user-agent': 'flycoop-mb-sheet/1.0' };
@@ -27,6 +27,14 @@ export default {
         return new Response((await r.text()).trim(), { status: r.ok ? 200 : 502, headers: CORS });
       }
       if (type === 'notam') {
+        try {
+          const body = new URLSearchParams({ searchType: '0', designatorsForLocation: icao, offset: '0', notamsOnly: 'false', radius: '10' });
+          const r = await fetch('https://notams.aim.faa.gov/notamSearch/search', { method: 'POST', body, headers: { ...UA, 'content-type': 'application/x-www-form-urlencoded' } });
+          const j = await r.json();
+          if (r.ok && Array.isArray(j.notamList)) {
+            return new Response(j.notamList.map(n => String(n.icaoMessage || n.traditionalMessageFrom4thWord || n.traditionalMessage || '').trim()).filter(Boolean).join('\n\n'), { headers: CORS });
+          }
+        } catch (e) {}
         const r = await fetch(`https://www.notams.faa.gov/dinsQueryWeb/queryRetrievalMapAction.do?reportType=Raw&retrieveLocId=${icao}&actionType=notamRetrievalByICAOs&submit=View+NOTAMs`, { headers: UA });
         return new Response(parseNotams(await r.text()), { status: r.ok ? 200 : 502, headers: CORS });
       }

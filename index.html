@@ -39,9 +39,10 @@ h2{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mu
 .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:14px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
 .grid.c2{grid-template-columns:1fr 1fr}
-label.f{display:flex;flex-direction:column;gap:3px;font-size:.78rem;color:var(--muted);min-width:0}
-label.f input,label.f select,label.f textarea{background:var(--field);border:1px solid var(--line);border-radius:5px;padding:.5rem .55rem;font-size:1rem;color:var(--ink);width:100%;min-width:0}
-label.f textarea{resize:vertical;min-height:4.5em}
+[hidden]{display:none!important}
+.f{display:flex;flex-direction:column;gap:3px;font-size:.78rem;color:var(--muted);min-width:0}
+.f input,.f select,.f textarea{background:var(--field);border:1px solid var(--line);border-radius:5px;padding:.5rem .55rem;font-size:1rem;color:var(--ink);width:100%;min-width:0}
+.f textarea{resize:vertical;min-height:4.5em}
 .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .seg label{padding:.45rem .8rem;cursor:pointer;background:var(--field);font-size:.95rem;border-right:1px solid var(--line)}
@@ -69,7 +70,27 @@ label.f textarea{resize:vertical;min-height:4.5em}
 .links a{color:var(--accent)}
 .status{font-size:.82rem;color:var(--muted);min-height:1.2em}
 .pane{display:none}.pane.on{display:block}
+@media (max-width:480px){.tab{padding:.6rem .5rem}}
 
+.hint.small{font-size:.76rem}
+.hint.stale{color:var(--warn);font-weight:600}
+.btn.icon{display:inline-flex;align-items:center;justify-content:center;min-width:40px;padding:.25rem .5rem}
+.f input.hiddenpick{position:absolute;right:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
+input.bad{border-color:var(--warn)!important;outline-color:var(--warn)}
+.xw{display:grid;gap:4px;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:.5rem .65rem;margin-top:8px;font-size:.88rem;font-variant-numeric:tabular-nums}
+.xw div{display:grid;grid-template-columns:70px 1fr;gap:8px}
+.xw span{color:var(--muted);font-size:.8rem}
+.xw b{font-weight:600}.xw b.good{color:var(--ok)}.xw b.bad{color:var(--warn)}
+.xw small{color:var(--muted);font-size:.76rem}
+details.set>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px}
+details.set>summary::-webkit-details-marker{display:none}
+details.set>summary h2{margin:0}
+details.set>summary::after{content:"+";color:var(--muted);font-size:1.2rem;line-height:1}
+details.set[open]>summary::after{content:"–"}
+details.set[open]>summary{margin-bottom:.7rem}
+.legs table.mini{min-width:0}
+.legs table.mini select{width:100%;min-width:4.5em;background:var(--field);border:1px solid var(--line);border-radius:4px;padding:.3rem .2rem;font-size:.9rem}
+code{font-size:.9em;background:var(--field);border:1px solid var(--line);border-radius:3px;padding:0 .25em}
 /* preview */
 #previewPane{position:sticky;top:12px;align-self:start;max-height:calc(100vh - 24px);overflow:auto;background:#8b949e;border-radius:8px;padding:12px}
 #stage{position:relative;margin:0 auto}
@@ -135,7 +156,7 @@ label.f textarea{resize:vertical;min-height:4.5em}
 <body>
 <div class="app">
   <header class="top">
-    <h1>Fly-Coop M&amp;B and navlog sheet</h1>
+    <h1 id="appTitle">M&amp;B and navlog sheet</h1>
     <div class="btns">
       <button class="btn" id="btnPreview" type="button">Preview</button>
       <button class="btn primary" id="btnPrint" type="button">Print / save as PDF</button>
@@ -147,6 +168,7 @@ label.f textarea{resize:vertical;min-height:4.5em}
       <button class="tab" role="tab" data-tab="mb" aria-selected="true">Mass &amp; balance</button>
       <button class="tab" role="tab" data-tab="nav" aria-selected="false">Navlog</button>
       <button class="tab" role="tab" data-tab="back" aria-selected="false">Back page</button>
+      <button class="tab" role="tab" data-tab="set" aria-selected="false">Settings</button>
     </div>
 
     <!-- ================= M&B ================= -->
@@ -158,12 +180,18 @@ label.f textarea{resize:vertical;min-height:4.5em}
             <select id="type" data-k="type"><option value="C172">Cessna 172</option><option value="C152">Cessna 152</option></select></label>
           <label class="f">Call sign
             <select id="callsign" data-k="callsign"></select></label>
-          <label class="f">Date of flight <input type="date" id="date" data-k="date"></label>
+          <div class="f">Date of flight
+            <span class="row" style="gap:6px;flex-wrap:nowrap;position:relative">
+              <input id="dateTxt" inputmode="numeric" placeholder="DD/MM/YYYY" autocomplete="off" aria-label="Date of flight, DD/MM/YYYY" style="flex:1">
+              <button class="btn small icon" id="dateBtn" type="button" aria-label="Pick the date from a calendar"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg></button>
+              <input type="date" id="datePick" tabindex="-1" aria-hidden="true" class="hiddenpick">
+            </span>
+          </div>
         </div>
         <div class="grid c2" style="margin-top:10px">
           <label class="f">PIC <input id="pic" data-k="pic" autocomplete="off"></label>
           <label class="f">Student pilot / group <input id="student" data-k="student" autocomplete="off"></label>
-          <label class="f">DEP <input id="dep" data-k="dep" autocomplete="off" placeholder="LHBS"></label>
+          <label class="f">DEP <input id="dep" data-k="dep" autocomplete="off"></label>
           <label class="f">DEST on M&amp;B <input id="dest" data-k="dest" autocomplete="off" placeholder="leave empty to write by hand"></label>
         </div>
         <div id="manualBox" hidden>
@@ -173,47 +201,50 @@ label.f textarea{resize:vertical;min-height:4.5em}
             <label class="f">Arm (in) <input id="marm" data-k="marm" inputmode="decimal"></label>
             <label class="f">Moment (optional) <input id="mmom" data-k="mmom" inputmode="decimal" placeholder="weight × arm"></label>
           </div>
-          <div class="row" style="margin-top:8px"><button class="btn small" id="saveAc" type="button">Save this aircraft to the list</button><span class="status" id="acStatus"></span></div>
+          <div class="row" style="margin-top:8px"><button class="btn small" id="saveAc" type="button">Save this aircraft to the fleet</button><span class="status" id="acStatus"></span></div>
         </div>
         <div class="note" id="momNote" hidden></div>
       </div>
 
       <div class="card">
         <h2>Loading</h2>
-        <div class="row">
-          <div class="seg" role="radiogroup" aria-label="People on board">
-            <label><input type="radio" name="people" value="2" data-k="people"> 2 people</label>
-            <label><input type="radio" name="people" value="1" data-k="people"> 1 person</label>
-          </div>
+        <div class="seg" role="radiogroup" aria-label="People on board">
+          <label><input type="radio" name="load" value="1" data-k="load"> 1 person</label>
+          <label><input type="radio" name="load" value="2" data-k="load"> 2 people</label>
+          <label><input type="radio" name="load" value="manual" data-k="load"> Manual</label>
         </div>
+        <p class="hint" id="loadHint"></p>
         <div class="grid" style="margin-top:10px">
-          <label class="f"><span id="lblPax">Pilot and passenger (lbs)</span> <input id="oPax" data-k="oPax" inputmode="decimal"></label>
-          <label class="f" id="wRow2"><span>Second row passenger (lbs)</span> <input id="oRow2" data-k="oRow2" inputmode="decimal"></label>
-          <label class="f"><span>Baggage area 1 (lbs)</span> <input id="oBag1" data-k="oBag1" inputmode="decimal" placeholder="–"></label>
-          <label class="f"><span>Baggage aft area 2 (lbs)</span> <input id="oBag2" data-k="oBag2" inputmode="decimal" placeholder="–"></label>
+          <label class="f" id="wFront" hidden><span>Front seats <span class="unit"></span></span> <input id="mFront" data-k="mFront" inputmode="decimal"></label>
+          <label class="f" id="wRear" hidden><span>Rear seats <span class="unit"></span></span> <input id="mRear" data-k="mRear" inputmode="decimal" placeholder="–"></label>
+          <label class="f"><span>Baggage area 1 <span class="unit"></span></span> <input id="oBag1" data-k="oBag1" inputmode="decimal" placeholder="–"></label>
+          <label class="f"><span>Baggage aft area 2 <span class="unit"></span></span> <input id="oBag2" data-k="oBag2" inputmode="decimal" placeholder="–"></label>
         </div>
-        <p class="hint">Empty boxes use the defaults (160 / 320 lbs, bags 10 / 20 lbs, baggage areas lined out).</p>
+        <p class="hint">Empty baggage boxes are lined out on the sheet.</p>
       </div>
 
       <div class="card">
         <h2>Fuel</h2>
-        <div class="row">
-          <div class="seg" role="radiogroup" aria-label="Fuel mode">
-            <label><input type="radio" name="fmode" value="rounds" data-k="fmode"> From rounds</label>
-            <label><input type="radio" name="fmode" value="manual" data-k="fmode"> Manual</label>
-          </div>
-          <div class="seg" role="radiogroup" aria-label="Round length">
-            <label><input type="radio" name="rlen" value="30" data-k="rlen"> 30 min rounds</label>
-            <label><input type="radio" name="rlen" value="60" data-k="rlen"> 60 min rounds</label>
+        <div class="seg" role="radiogroup" aria-label="Fuel mode">
+          <label><input type="radio" name="fmode" value="rounds" data-k="fmode"> From rounds</label>
+          <label><input type="radio" name="fmode" value="manual" data-k="fmode"> Manual</label>
+        </div>
+        <div id="fRounds">
+          <div class="seg" role="radiogroup" aria-label="Round length" id="rlenSeg" style="margin-top:10px"></div>
+          <div class="grid" style="margin-top:10px">
+            <label class="f">Rounds today (including yours) <input id="rounds" data-k="rounds" type="number" min="0" max="20" step="1" inputmode="numeric"></label>
           </div>
         </div>
-        <div class="grid" style="margin-top:10px">
-          <label class="f" id="wRounds">Rounds today (including yours) <input id="rounds" data-k="rounds" type="number" min="1" max="12" step="1" inputmode="numeric"></label>
-          <label class="f" id="wManual" hidden>Usable fuel
-            <span class="row" style="gap:6px;flex-wrap:nowrap"><input id="mfuel" data-k="mfuel" inputmode="decimal" style="flex:1"><select id="funit" data-k="funit" style="width:5.5em;flex:none"><option value="gal">US gal</option><option value="lbs">lbs</option></select></span></label>
-          <label class="f">Trip fuel for this flight (US gal) <input id="oTrip" data-k="oTrip" inputmode="decimal"></label>
+        <div id="fManual" hidden>
+          <div class="grid c2" style="margin-top:10px">
+            <label class="f">Usable fuel on board
+              <span class="row" style="gap:6px;flex-wrap:nowrap"><input id="mfuel" data-k="mfuel" inputmode="decimal" style="flex:1"><select id="mfuelU" data-k="mfuelU" style="width:5.5em;flex:none" aria-label="Unit"><option value="gal">US gal</option><option value="l">litres</option><option value="lbs">lbs</option></select></span></label>
+            <label class="f">Trip fuel for this flight
+              <span class="row" style="gap:6px;flex-wrap:nowrap"><input id="mtrip" data-k="mtrip" inputmode="decimal" style="flex:1"><select id="mtripU" data-k="mtripU" style="width:5.5em;flex:none" aria-label="Unit"><option value="gal">US gal</option><option value="l">litres</option><option value="lbs">lbs</option></select></span></label>
+          </div>
         </div>
         <p class="hint" id="fuelHint"></p>
+        <p class="hint small" id="fuelEndur"></p>
       </div>
 
       <div class="card">
@@ -270,11 +301,7 @@ label.f textarea{resize:vertical;min-height:4.5em}
     <section class="pane" id="pane-back">
       <div class="card">
         <h2>Back page</h2>
-        <div class="grid c2">
-          <label class="f">Page position
-            <select id="bside" data-k="bside"><option value="left">Left A5 half</option><option value="right">Right A5 half</option></select></label>
-        </div>
-        <p class="hint">Aircraft and date come from the M&amp;B tab. NOTAM, METAR and TAF are looked up automatically for the ICAO codes below. You can edit any text; a new lookup replaces your edit.</p>
+        <p class="hint" style="margin-top:0">Printed on the left half of the second page. Aircraft and date come from the M&amp;B tab. NOTAM, METAR and TAF are looked up automatically and refreshed while the page is open. You can edit any text; your edit is kept until you press “Look up again”.</p>
         <div class="row" style="margin-top:8px"><button class="btn small" id="btnRefresh" type="button">Look up again</button></div>
       </div>
       <div class="card">
@@ -293,20 +320,94 @@ label.f textarea{resize:vertical;min-height:4.5em}
         </div>
         <div class="status" id="wxStatus" style="margin-top:6px"></div>
         <label class="f" style="margin-top:6px">METAR <textarea id="metar" data-k="metar"></textarea></label>
+        <div class="xw" id="xw" hidden></div>
         <label class="f" style="margin-top:10px">TAF <textarea id="taf" data-k="taf" style="min-height:6em"></textarea></label>
+        <p class="hint" id="wxAge"></p>
         <div class="links" id="wxLinks"></div>
-        <details style="margin-top:10px"><summary class="hint" style="cursor:pointer">Lookup settings</summary>
-          <label class="f" style="margin-top:8px">Own lookup server URL (optional, most reliable)
-            <input id="server" data-k="server" autocomplete="off" placeholder="https://your-worker.workers.dev/"></label>
-          <label class="f" style="margin-top:8px">Public relay (used for the official sources; the target address is appended)
-            <input id="proxy" data-k="proxy" autocomplete="off"></label>
-          <p class="hint">Browsers block direct requests to aviationweather.gov and the FAA NOTAM service. The page tries your server first, then public CORS-enabled sources (metar.vatsim.net, datamask.org, metars.eu), then the relay. Only the ICAO code is sent. Check NOTAMs against official AIS before flight.</p>
-        </details>
       </div>
       <div class="card">
         <h2>Briefing</h2>
         <label class="f">One item per line, leave empty to write by hand <textarea id="briefing" data-k="briefing" style="min-height:7em" placeholder="traffic circuit&#10;engine failure after take-off"></textarea></label>
       </div>
+    </section>
+
+    <!-- ================= SETTINGS ================= -->
+    <section class="pane" id="pane-set">
+      <p class="hint" style="margin:0 0 10px">Saved in this browser and used for every new sheet. Empty boxes use the club defaults.</p>
+
+      <details class="card set" open>
+        <summary><h2>Personal</h2></summary>
+        <div class="row" style="margin-top:4px">
+          <span class="hint" style="margin:0">Weights for people and bags in</span>
+          <div class="seg" role="radiogroup" aria-label="Weight unit">
+            <label><input type="radio" name="unit" value="lbs" data-s="unit"> lbs</label>
+            <label><input type="radio" name="unit" value="kg" data-s="unit"> kg</label>
+          </div>
+        </div>
+        <div class="grid" style="margin-top:10px">
+          <label class="f"><span>My weight <span class="unit"></span></span> <input data-s="me" inputmode="decimal"></label>
+          <label class="f"><span>Passenger, average <span class="unit"></span></span> <input data-s="pax" inputmode="decimal"></label>
+          <label class="f"><span>Bags per person, rear seat <span class="unit"></span></span> <input data-s="bags" inputmode="decimal"></label>
+        </div>
+        <p class="hint">Used when “1 person” or “2 people” is selected on the M&amp;B tab.</p>
+      </details>
+
+      <details class="card set">
+        <summary><h2>Fuel</h2></summary>
+        <div class="legs"><table id="roundTable" class="mini"></table></div>
+        <div class="row" style="margin-top:8px"><button class="btn small" id="addRound" type="button">Add round length</button></div>
+        <div class="grid" style="margin-top:10px">
+          <label class="f">Reserve, extra rounds <input data-s="resRounds" inputmode="decimal"></label>
+          <label class="f">C172 burn (US gal/h) <input data-s="burnC172" inputmode="decimal"></label>
+          <label class="f">C152 burn (US gal/h) <input data-s="burnC152" inputmode="decimal"></label>
+          <label class="f">Final reserve (min) <input data-s="resMin" inputmode="decimal"></label>
+        </div>
+        <p class="hint">Fuel from rounds = (rounds today + reserve rounds) × fuel per round; trip fuel is one round. Burn and final reserve are only used for the endurance line.</p>
+      </details>
+
+      <details class="card set">
+        <summary><h2>Club and airfield</h2></summary>
+        <div class="grid">
+          <label class="f">Club name on the sheets <input data-s="club" autocomplete="off"></label>
+          <label class="f">Home airfield (DEP, NOTAM) <input data-s="home" maxlength="4" autocomplete="off" style="text-transform:uppercase"></label>
+          <label class="f">Weather station <input data-s="wxIcao" maxlength="4" autocomplete="off" style="text-transform:uppercase"></label>
+          <label class="f">Runways <input data-s="runways" autocomplete="off" placeholder="09/27, 13/31"></label>
+          <label class="f">C172 max crosswind (kt) <input data-s="xwC172" inputmode="decimal"></label>
+          <label class="f">C152 max crosswind (kt) <input data-s="xwC152" inputmode="decimal"></label>
+        </div>
+        <label class="f" style="margin-top:10px">Navlog frequencies, one per line (5 lines) <textarea data-s="freqs" style="min-height:7em"></textarea></label>
+        <div class="row" style="margin-top:10px">
+          <span class="hint" style="margin:0">Logo on the front page:</span>
+          <label class="btn small" style="display:inline-flex;align-items:center">Upload…<input type="file" id="logoFile" accept="image/*" hidden></label>
+          <button class="btn small" id="logoNone" type="button">No logo</button>
+          <button class="btn small" id="logoDef" type="button">Default</button>
+        </div>
+      </details>
+
+      <details class="card set">
+        <summary><h2>Fleet</h2></summary>
+        <div class="legs"><table id="fleetTable" class="mini"></table></div>
+        <div class="row" style="margin-top:8px"><button class="btn small" id="addAc" type="button">Add aircraft</button><button class="btn small" id="fleetReset" type="button">Back to the club list</button></div>
+        <p class="hint">Basic empty weight in lbs, arm in inches. Leave the moment empty to use weight × arm.</p>
+      </details>
+
+      <details class="card set">
+        <summary><h2>NOTAM and weather lookup</h2></summary>
+        <label class="f">Own lookup server URL (optional) <input data-s="server" autocomplete="off" placeholder="https://your-worker.workers.dev/"></label>
+        <label class="f" style="margin-top:8px">Public relay (the target address is appended) <input data-s="proxy" autocomplete="off"></label>
+        <p class="hint">Order tried: your server, the briefing data this site keeps up to date (see README), public CORS-enabled sources, then the relay. Only the ICAO code is sent. Always check NOTAMs against official AIS before flight.</p>
+      </details>
+
+      <details class="card set">
+        <summary><h2>Share or reset</h2></summary>
+        <div class="row">
+          <button class="btn small" id="setExport" type="button">Export settings</button>
+          <label class="btn small" style="display:inline-flex;align-items:center">Import settings…<input type="file" id="setImport" accept=".json,application/json" hidden></label>
+          <button class="btn small" id="setReset" type="button">Reset to club defaults</button>
+        </div>
+        <span class="status" id="setStatus"></span>
+        <p class="hint">To make your setup the default for everyone using your copy of the site, export it and save the file as <code>config.json</code> next to <code>index.html</code>.</p>
+      </details>
     </section>
   </main>
 
@@ -315,7 +416,6 @@ label.f textarea{resize:vertical;min-height:4.5em}
 
 <div class="prevbar"><button class="btn" id="btnClose" type="button">Back to form</button><button class="btn primary" id="btnPrint2" type="button" style="margin-left:auto">Print / save as PDF</button></div>
 <div class="dock"><button class="btn" id="btnPreview2" type="button">Preview</button><button class="btn primary" id="btnPrint3" type="button">Print / save as PDF</button></div>
-
 <script>
 const FR = {"navlog": "<table class=\"wt\" data-t=\"navlog\" style=\"width:1100.25pt\"><colgroup><col style=\"width:168.3pt\"><col style=\"width:41.85pt\"><col style=\"width:105.15pt\"><col style=\"width:20.7pt\"><col style=\"width:132pt\"><col style=\"width:20.4pt\"><col style=\"width:23.55pt\"><col style=\"width:42pt\"><col style=\"width:80.1pt\"><col style=\"width:63.75pt\"><col style=\"width:45.75pt\"><col style=\"width:39.3pt\"><col style=\"width:106.35pt\"><col style=\"width:52.35pt\"><col style=\"width:158.7pt\"></colgroup>\n<tr data-r=\"0\" style=\"height:40.05pt\">\n<td data-c=\"0\" colspan=\"15\" style=\"background-color:#0D0D0D;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700;color:#FFFFFF\">FLY-COOP VFR NAVLOG SEP</span></p></td>\n</tr>\n<tr data-r=\"1\">\n<td data-c=\"0\" colspan=\"3\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:0 none;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">A/C TYPE, CALL SIGN</span></p></td>\n<td data-c=\"1\" colspan=\"5\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:0 none;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">DATE</span></p></td>\n<td data-c=\"2\" colspan=\"6\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:0 none;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">PIC</span></p></td>\n<td data-c=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:left\"><span style=\"font-size:24pt\">BUDAÖRS INF 124.510</span></p></td>\n</tr>\n<tr data-r=\"2\">\n<td data-c=\"0\" colspan=\"3\" style=\"vertical-align:middle;border-top:0 none;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"1\" colspan=\"5\" style=\"vertical-align:middle;border-top:0 none;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"6\" style=\"vertical-align:middle;border-top:0 none;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:left\"><span style=\"font-size:24pt\">NORTH INF. 119.350</span></p></td>\n</tr>\n<tr data-r=\"3\">\n<td data-c=\"0\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0 none;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">DEP</span></p></td>\n<td data-c=\"1\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:0 none;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"2\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0 none;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">DES</span><span style=\"font-size:24pt;font-weight:700\">T</span></p></td>\n<td data-c=\"3\" colspan=\"4\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:0 none;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"4\" colspan=\"3\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0 none;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">ALTERNATE</span></p></td>\n<td data-c=\"5\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:0 none;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"6\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:left\"><span style=\"font-size:24pt\">WEST INF. 125.500</span></p></td>\n</tr>\n<tr data-r=\"4\">\n<td data-c=\"0\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0 none;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">CRZ SPEED</span></p></td>\n<td data-c=\"1\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:0 none;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"2\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:4.5pt solid #000;;border-right:0 none;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">QNH</span></p></td>\n<td data-c=\"3\" colspan=\"4\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:0 none;;border-bottom:4.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"4\" colspan=\"3\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:4.5pt solid #000;;border-right:0 none;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">SQUAWK</span></p></td>\n<td data-c=\"5\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:0 none;;border-bottom:4.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"6\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:left\"><span style=\"font-size:24pt\">EAST INF. 133.000</span></p></td>\n</tr>\n<tr data-r=\"5\" style=\"height:53.85pt\">\n<td data-c=\"0\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0 none;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">CRZ ALT</span></p></td>\n<td data-c=\"1\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:0 none;;border-bottom:1.5pt solid #000;;border-right:4.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"2\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:4.5pt solid #000;;border-left:4.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0 none;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">BLOFF</span></p></td>\n<td data-c=\"3\" colspan=\"4\" style=\"vertical-align:middle;border-top:4.5pt solid #000;;border-left:0 none;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"4\" colspan=\"3\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:4.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0 none;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">T/O</span></p></td>\n<td data-c=\"5\" colspan=\"2\" style=\"vertical-align:middle;border-top:4.5pt solid #000;;border-left:0 none;;border-bottom:1.5pt solid #000;;border-right:4.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"6\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:4.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:left\"><span style=\"font-size:24pt\">Guard 121.500</span></p></td>\n</tr>\n<tr data-r=\"6\" style=\"height:55.35pt\">\n<td data-c=\"0\" colspan=\"3\" class=\"dg\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:4.5pt solid #000;;border-right:4.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"1\" colspan=\"2\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:4.5pt solid #000;;border-bottom:4.5pt solid #000;;border-right:0 none;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">BLON</span></p></td>\n<td data-c=\"2\" colspan=\"4\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:0 none;;border-bottom:4.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:4.5pt solid #000;;border-right:0 none;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">LDG</span></p></td>\n<td data-c=\"4\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:0 none;;border-bottom:4.5pt solid #000;;border-right:4.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"5\" class=\"dg\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:4.5pt solid #000;;border-bottom:4.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"7\">\n<td data-c=\"0\" colspan=\"2\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">WAYPOINTS</span></p></td>\n<td data-c=\"1\" colspan=\"7\" class=\"dg\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"2\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">ATA</span></p></td>\n<td data-c=\"3\" colspan=\"4\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">REMARKS / RWY INFO</span></p></td>\n</tr>\n<tr data-r=\"8\">\n<td data-c=\"0\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"1\" colspan=\"2\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">T CRS</span></p></td>\n<td data-c=\"2\" colspan=\"2\" rowspan=\"2\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">DISTANCE NM</span></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">ETE</span></p></td>\n<td data-c=\"4\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"5\" colspan=\"4\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"9\">\n<td data-c=\"1\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">M CRS</span></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">ETA</span></p></td>\n</tr>\n<tr data-r=\"10\">\n<td data-c=\"0\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"1\" colspan=\"2\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"4\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"5\" colspan=\"4\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"11\">\n<td data-c=\"1\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"12\">\n<td data-c=\"0\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"1\" colspan=\"2\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"4\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"5\" colspan=\"4\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"13\">\n<td data-c=\"1\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"14\">\n<td data-c=\"0\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"1\" colspan=\"2\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"4\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"5\" colspan=\"4\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"15\">\n<td data-c=\"1\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"16\">\n<td data-c=\"0\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"1\" colspan=\"2\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"4\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"5\" colspan=\"4\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"17\">\n<td data-c=\"1\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"18\">\n<td data-c=\"0\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"1\" colspan=\"2\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"4\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"5\" colspan=\"4\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"19\">\n<td data-c=\"1\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"20\">\n<td data-c=\"0\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"1\" colspan=\"2\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"4\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"5\" colspan=\"4\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"21\">\n<td data-c=\"1\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"22\">\n<td data-c=\"0\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"1\" colspan=\"2\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"4\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"5\" colspan=\"4\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"23\">\n<td data-c=\"1\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"24\">\n<td data-c=\"0\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"1\" colspan=\"2\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"4\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"5\" colspan=\"4\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"25\">\n<td data-c=\"1\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"26\">\n<td data-c=\"0\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"1\" colspan=\"2\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"4\" colspan=\"2\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"5\" colspan=\"4\" rowspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"27\">\n<td data-c=\"1\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"28\" style=\"height:69.9pt\">\n<td data-c=\"0\" colspan=\"4\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:right\"><span style=\"font-size:24pt;font-weight:700\">TOTAL</span></p></td>\n<td data-c=\"1\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"6\" class=\"dg\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"29\">\n<td data-c=\"0\" colspan=\"4\" rowspan=\"2\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:right\"><span style=\"font-size:24pt;font-weight:700\">FUEL</span></p></td>\n<td data-c=\"1\" colspan=\"2\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">TAXI</span></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">TRIP</span></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">RESERVE</span></p></td>\n<td data-c=\"4\" colspan=\"2\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:4.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">EXTRA</span></p></td>\n<td data-c=\"5\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:4.5pt solid #000;;border-left:4.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:4.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:21pt;font-weight:700\">TOTAL REQD</span></p></td>\n</tr>\n<tr data-r=\"30\" style=\"height:59.4pt\">\n<td data-c=\"1\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"4\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:4.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"5\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:4.5pt solid #000;;border-bottom:4.5pt solid #000;;border-right:4.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"31\" style=\"height:40.95pt\">\n<td data-c=\"0\" colspan=\"3\" style=\"background-color:#000000;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700;color:#fff\">PERFORMANCE SEP</span></p></td>\n<td data-c=\"1\" colspan=\"4\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">DEP</span></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">DES</span><span style=\"font-size:24pt;font-weight:700\">T</span><span style=\"font-size:24pt;font-weight:700\">/ENR AD</span></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">ENR AD</span></p></td>\n<td data-c=\"4\" colspan=\"2\" style=\"background-color:#D9D9D9;vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">ENR AD / ALT</span></p></td>\n</tr>\n<tr data-r=\"32\" style=\"height:44.1pt\">\n<td data-c=\"0\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">TOR</span></p></td>\n<td data-c=\"1\" colspan=\"4\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"4\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"33\" style=\"height:40.5pt\">\n<td data-c=\"0\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">TODR</span></p></td>\n<td data-c=\"1\" colspan=\"4\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"4\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"34\" style=\"height:41.1pt\">\n<td data-c=\"0\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:4.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700\">LDR</span></p></td>\n<td data-c=\"1\" colspan=\"4\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:4.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:4.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:4.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"4\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:4.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n</table>", "C172": {"check": "<table class=\"wt\" data-t=\"check\" style=\"width:1098.75pt\"><colgroup><col style=\"width:337.95pt\"><col style=\"width:19.2pt\"><col style=\"width:246.3pt\"><col style=\"width:96pt\"><col style=\"width:27.15pt\"><col style=\"width:117.9pt\"><col style=\"width:254.25pt\"></colgroup>\n<tr data-r=\"0\">\n<td class=\"gb\" colspan=\"1\"></td>\n<td data-c=\"0\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.3173;text-align:left\"><span style=\"font-size:24pt\">Nav log</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">     </span><span style=\"font-size:24pt\">□</span></p></td>\n<td data-c=\"1\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.3173;text-align:left\"><span style=\"font-size:24pt\">Met information</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">□</span></p></td>\n</tr>\n<tr data-r=\"1\">\n<td class=\"gb\" colspan=\"1\"></td>\n<td data-c=\"0\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.3173;text-align:left\"><span style=\"font-size:24pt\">Fightplan</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">     </span><span style=\"font-size:24pt\">□</span></p></td>\n<td data-c=\"1\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.3173;text-align:left\"><span style=\"font-size:24pt\">M&amp;B calculation</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">□</span></p></td>\n</tr>\n<tr data-r=\"2\">\n<td class=\"gb\" colspan=\"1\"></td>\n<td data-c=\"0\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.3173;text-align:left\"><span style=\"font-size:24pt\">Map prepared</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">     </span><span style=\"font-size:24pt\">□</span></p></td>\n<td data-c=\"1\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.3173;text-align:left\"><span style=\"font-size:24pt\">Performance calculation</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">□</span></p></td>\n</tr>\n<tr data-r=\"3\">\n<td class=\"gb\" colspan=\"1\"></td>\n<td data-c=\"0\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.3173;text-align:left\"><span style=\"font-size:24pt\">Notams</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">     </span><span style=\"font-size:24pt\">□</span></p></td>\n<td data-c=\"1\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.3173;text-align:left\"><span style=\"font-size:24pt\">Airport VFR charts</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">□</span></p></td>\n</tr>\n</table>", "mb": "<table class=\"wt\" data-t=\"mb\" style=\"width:1098.75pt\"><colgroup><col style=\"width:337.95pt\"><col style=\"width:19.2pt\"><col style=\"width:246.3pt\"><col style=\"width:96pt\"><col style=\"width:27.15pt\"><col style=\"width:117.9pt\"><col style=\"width:254.25pt\"></colgroup>\n<tr data-r=\"4\" style=\"height:39.15pt\">\n<td data-c=\"0\" colspan=\"7\" style=\"background-color:#000000;vertical-align:middle;border-top:0.75pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700;color:#fff\">M&amp;B LOAD SHEET C17</span><span style=\"font-size:24pt;font-weight:700;color:#fff\">2</span></p></td>\n</tr>\n<tr data-r=\"5\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:middle;border-top:4.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.8310;text-align:left\"><span style=\"font-size:24pt\">PIC:</span></p></td>\n<td data-c=\"1\" colspan=\"3\" style=\"vertical-align:middle;border-top:4.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:left\"><span style=\"font-size:24pt\">Student</span><span style=\"font-size:24pt\"><br>Pilot:</span></p></td>\n<td data-c=\"2\" colspan=\"2\" style=\"vertical-align:middle;border-top:4.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:24pt;line-height:1.8310;text-align:left\"><span style=\"font-size:24pt\">DOF:</span></p></td>\n</tr>\n<tr data-r=\"6\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:4.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.8310;text-align:left\"><span style=\"font-size:24pt\">CALL SIGN: </span></p></td>\n<td data-c=\"1\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:4.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.8310;text-align:left\"><span style=\"font-size:24pt\">DEP:</span></p></td>\n<td data-c=\"2\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:4.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:24pt;line-height:1.8310;text-align:left\"><span style=\"font-size:24pt\">DES</span><span style=\"font-size:24pt\">T</span><span style=\"font-size:24pt\">:</span></p></td>\n</tr>\n<tr data-r=\"7\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:4.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"1\" style=\"vertical-align:top;border-top:4.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt\">Weight</span></p><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt\">(lbs)</span></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:top;border-top:4.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt\">Arm</span></p><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt\">(inch)</span></p></td>\n<td data-c=\"3\" style=\"vertical-align:top;border-top:4.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt\">Moment</span></p><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt\">(lb-inch/1000)</span></p></td>\n</tr>\n<tr data-r=\"8\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.4648;text-align:center\"><span style=\"font-size:24pt\">Basic Empty Weight</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"9\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.4648;text-align:center\"><span style=\"font-size:24pt\">Pilot and passenger</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt\">37</span></p></td>\n<td data-c=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"10\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.4648;text-align:center\"><span style=\"font-size:24pt\">Second row passenger</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt\">73</span></p></td>\n<td data-c=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"11\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.4648;text-align:center\"><span style=\"font-size:24pt\">Baggage Area &#x27;1&#x27;</span></p><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt\">max. 120 lbs</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt\">95</span></p></td>\n<td data-c=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"12\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.4648;text-align:center\"><span style=\"font-size:24pt\">Baggage Aft Area &#x27;2&#x27;</span></p><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt\">max. 5</span><span style=\"font-size:24pt\">0 lbs</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt\">123</span></p></td>\n<td data-c=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"13\" style=\"height:41.7pt\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt\">Zero Fuel Weight</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"14\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.4648;text-align:center\"><span style=\"font-size:24pt\">Usable fuel</span></p><p style=\"font-size:24pt;line-height:1.4648;text-align:center\"><span style=\"font-size:24pt\">(6,7 lbs/US Gal</span><span style=\"font-size:24pt\"> – JETA1</span><span style=\"font-size:24pt\">)</span></p><p style=\"font-size:24pt;line-height:1.4648;text-align:center\"><span style=\"font-size:24pt\">(6 lbs/US Gal – AVGAS)</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt\">48</span></p></td>\n<td data-c=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"15\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.4648;text-align:center\"><span style=\"font-size:24pt\">Ramp weight</span></p><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt\">max. 230</span><span style=\"font-size:24pt\">2 lbs</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"16\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.4648;text-align:center\"><span style=\"font-size:24pt\">Start up, taxi and runup</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt\">13</span></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt\">-0,</span><span style=\"font-size:24pt\">6</span></p></td>\n</tr>\n<tr data-r=\"17\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.4648;text-align:center\"><span style=\"font-size:24pt\">Take-off weight</span></p><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt\">max. 230</span><span style=\"font-size:24pt\">0 lbs</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"18\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.4648;text-align:center\"><span style=\"font-size:24pt\">Trip fuel</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt\">48</span></p></td>\n<td data-c=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"19\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.4648;text-align:center\"><span style=\"font-size:24pt\">Landing Weight</span></p><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt\">max. 230</span><span style=\"font-size:24pt\">0 lbs</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:24pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"20\" style=\"height:654.3pt\">\n<td data-c=\"0\" colspan=\"7\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:0.75pt solid #000;;border-right:0.75pt solid #000;\"></td>\n</tr>\n</table>"}, "C152": {"check": "<table class=\"wt\" data-t=\"check\" style=\"width:1098.75pt\"><colgroup><col style=\"width:337.95pt\"><col style=\"width:19.2pt\"><col style=\"width:246.3pt\"><col style=\"width:96pt\"><col style=\"width:27.15pt\"><col style=\"width:117.9pt\"><col style=\"width:254.25pt\"></colgroup>\n<tr data-r=\"0\">\n<td class=\"gb\" colspan=\"1\"></td>\n<td data-c=\"0\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.3173;text-align:left\"><span style=\"font-size:24pt\">Nav log</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">     </span><span style=\"font-size:24pt\">□</span></p></td>\n<td data-c=\"1\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.3173;text-align:left\"><span style=\"font-size:24pt\">Met information</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">□</span></p></td>\n</tr>\n<tr data-r=\"1\">\n<td class=\"gb\" colspan=\"1\"></td>\n<td data-c=\"0\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.3173;text-align:left\"><span style=\"font-size:24pt\">F</span><span style=\"font-size:24pt\">l</span><span style=\"font-size:24pt\">ightplan</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">     </span><span style=\"font-size:24pt\">□</span></p></td>\n<td data-c=\"1\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.3173;text-align:left\"><span style=\"font-size:24pt\">M&amp;B calculation</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">□</span></p></td>\n</tr>\n<tr data-r=\"2\">\n<td class=\"gb\" colspan=\"1\"></td>\n<td data-c=\"0\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.3173;text-align:left\"><span style=\"font-size:24pt\">Map prepared</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">     </span><span style=\"font-size:24pt\">□</span></p></td>\n<td data-c=\"1\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.3173;text-align:left\"><span style=\"font-size:24pt\">Performance calculation</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">□</span></p></td>\n</tr>\n<tr data-r=\"3\">\n<td class=\"gb\" colspan=\"1\"></td>\n<td data-c=\"0\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.3173;text-align:left\"><span style=\"font-size:24pt\">Notams</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">     </span><span style=\"font-size:24pt\">□</span></p></td>\n<td data-c=\"1\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.3173;text-align:left\"><span style=\"font-size:24pt\">Airport VFR charts</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">&emsp;</span><span style=\"font-size:24pt\">□</span></p></td>\n</tr>\n</table>", "mb": "<table class=\"wt\" data-t=\"mb\" style=\"width:1098.75pt\"><colgroup><col style=\"width:337.95pt\"><col style=\"width:19.2pt\"><col style=\"width:246.3pt\"><col style=\"width:96pt\"><col style=\"width:27.15pt\"><col style=\"width:117.9pt\"><col style=\"width:254.25pt\"></colgroup>\n<tr data-r=\"4\" style=\"height:39.15pt\">\n<td data-c=\"0\" colspan=\"7\" style=\"background-color:#000000;vertical-align:middle;border-top:0.75pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:center\"><span style=\"font-size:24pt;font-weight:700;color:#fff\">M&amp;B LOAD SHEET C15</span><span style=\"font-size:24pt;font-weight:700;color:#fff\">2</span></p></td>\n</tr>\n<tr data-r=\"5\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:middle;border-top:4.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.8310;text-align:left\"><span style=\"font-size:24pt\">PIC:</span></p></td>\n<td data-c=\"1\" colspan=\"3\" style=\"vertical-align:middle;border-top:4.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.2207;text-align:left\"><span style=\"font-size:24pt\">Student</span><span style=\"font-size:24pt\"><br>Pilot:</span></p></td>\n<td data-c=\"2\" colspan=\"2\" style=\"vertical-align:middle;border-top:4.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:24pt;line-height:1.8310;text-align:left\"><span style=\"font-size:24pt\">DOF:</span></p></td>\n</tr>\n<tr data-r=\"6\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:4.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.8310;text-align:left\"><span style=\"font-size:24pt\">CALL SIGN: </span></p></td>\n<td data-c=\"1\" colspan=\"3\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:4.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:24pt;line-height:1.8310;text-align:left\"><span style=\"font-size:24pt\">DEP:</span></p></td>\n<td data-c=\"2\" colspan=\"2\" style=\"vertical-align:middle;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:4.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:24pt;line-height:1.8310;text-align:left\"><span style=\"font-size:24pt\">DES</span><span style=\"font-size:24pt\">T</span><span style=\"font-size:24pt\">:</span></p></td>\n</tr>\n<tr data-r=\"7\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:4.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n<td data-c=\"1\" style=\"vertical-align:top;border-top:4.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;line-height:1.2207;text-align:center\"><span style=\"font-size:27pt\">Weight</span></p><p style=\"font-size:27pt;line-height:1.2207;text-align:center\"><span style=\"font-size:27pt\">(lbs)</span></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:top;border-top:4.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;line-height:1.2207;text-align:center\"><span style=\"font-size:27pt\">Arm</span></p><p style=\"font-size:27pt;line-height:1.2207;text-align:center\"><span style=\"font-size:27pt\">(inch)</span></p></td>\n<td data-c=\"3\" style=\"vertical-align:top;border-top:4.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:27pt;line-height:1.2207;text-align:center\"><span style=\"font-size:27pt\">Moment</span></p><p style=\"font-size:27pt;line-height:1.2207;text-align:center\"><span style=\"font-size:27pt\">(lb-inch/1000)</span></p></td>\n</tr>\n<tr data-r=\"8\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;line-height:1.4648;text-align:center\"><span style=\"font-size:27pt\">Basic Empty Weight</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"9\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;line-height:1.4648;text-align:center\"><span style=\"font-size:27pt\">Usable fuel (6 lbs/US Gal)</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;line-height:1.2207;text-align:center\"><span style=\"font-size:27pt\">42</span></p></td>\n<td data-c=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"10\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;line-height:1.4648;text-align:center\"><span style=\"font-size:27pt\">Pilot and passenger</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;line-height:1.2207;text-align:center\"><span style=\"font-size:27pt\">39</span></p></td>\n<td data-c=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"11\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;line-height:1.4648;text-align:center\"><span style=\"font-size:27pt\">Baggage Area &#x27;1&#x27;</span></p><p style=\"font-size:27pt;line-height:1.2207;text-align:center\"><span style=\"font-size:27pt\">max. 120 lbs</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;line-height:1.2207;text-align:center\"><span style=\"font-size:27pt\">64</span></p></td>\n<td data-c=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"12\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;line-height:1.4648;text-align:center\"><span style=\"font-size:27pt\">Baggage Aft Area &#x27;2&#x27;</span></p><p style=\"font-size:27pt;line-height:1.2207;text-align:center\"><span style=\"font-size:27pt\">max. 40 lbs</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;line-height:1.2207;text-align:center\"><span style=\"font-size:27pt\">84</span></p></td>\n<td data-c=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"13\" style=\"height:41.7pt\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;line-height:1.4648;text-align:center\"><span style=\"font-size:27pt\">Ramp weight</span></p><p style=\"font-size:27pt;line-height:1.2207;text-align:center\"><span style=\"font-size:27pt\">max. 1672 lbs</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"14\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;line-height:1.4648;text-align:center\"><span style=\"font-size:27pt\">Start up, taxi and runup</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;line-height:1.2207;text-align:center\"><span style=\"font-size:27pt\">6</span></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:27pt;line-height:1.2207;text-align:center\"><span style=\"font-size:27pt\">-0,2</span></p></td>\n</tr>\n<tr data-r=\"15\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;line-height:1.4648;text-align:center\"><span style=\"font-size:27pt\">Take-off weight</span></p><p style=\"font-size:27pt;line-height:1.2207;text-align:center\"><span style=\"font-size:27pt\">max. 1670 lbs</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"16\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;line-height:1.4648;text-align:center\"><span style=\"font-size:27pt\">Trip fuel</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;line-height:1.2207;text-align:center\"><span style=\"font-size:27pt\">42</span></p></td>\n<td data-c=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"17\">\n<td data-c=\"0\" colspan=\"2\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;line-height:1.4648;text-align:center\"><span style=\"font-size:27pt\">Landing Weight</span></p><p style=\"font-size:27pt;line-height:1.2207;text-align:center\"><span style=\"font-size:27pt\">max. 1670 lbs</span></p></td>\n<td data-c=\"1\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n<td data-c=\"2\" colspan=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:1.5pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n<td data-c=\"3\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:1.5pt solid #000;;border-bottom:1.5pt solid #000;;border-right:0.75pt solid #000;\"><p style=\"font-size:27pt;height:1.2207em\"></p></td>\n</tr>\n<tr data-r=\"18\" style=\"height:654.3pt\">\n<td data-c=\"0\" colspan=\"7\" style=\"vertical-align:top;border-top:1.5pt solid #000;;border-left:0.75pt solid #000;;border-bottom:0.75pt solid #000;;border-right:0.75pt solid #000;\"></td>\n</tr>\n</table>"}};
 const LOGO = "data:image/png;base64,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";
@@ -333,34 +433,80 @@ const TYPES = {
         chart:{w:312.75,h:202.5,x0:30,x1:37,xs:1,y0:1000,y1:1800,ys:100,xminor:0.1,left:16.95,top:7.8},
         rows:{bew:8,fuel:9,pax:10,bag1:11,bag2:12,ramp:13,start:14,tow:15,trip:16,ldw:17,chart:18}}
 };
-// Basic empty weights from the club table. "mom" is the moment printed in that table.
-const BASE_AIRCRAFT = [
-  ['BCO',1575,41.23,64.94],['BCP',1602,41.44,66.14],['BDE',1563,41.19,64.37],['BDY',1576,40.71,63.95],
-  ['BEB',1614,42.21,73.89],['BFN',1625,41.52,73.52],['BFO',1614,41.15,72.64],['BFP',1598,42.08,73.59],
-  ['BFQ',1615,41.75,74.25],['BFS',1617,43.23,75.25],['BFW',1617,41.21,73.67],['BGR',1603,41.08,65.86],
-  ['BFR',1609,41.4,72.88]
-].map(a=>({cs:'HA-'+a[0],type:'C172',w:a[1],arm:a[2],mom:a[3]}));
+const KG=2.20462, L_PER_GAL=3.78541;
+// Built-in setup. config.json next to index.html (club defaults) and the Settings tab (this browser) override it.
+const SETUP_DEFAULTS={
+  club:'FLY-COOP', home:'LHBS', wxIcao:'LHBP', runways:'09/27', xwC172:15, xwC152:12,
+  freqs:'BUDAÖRS INF 124.510\nNORTH INF. 119.350\nWEST INF. 125.500\nEAST INF. 133.000\nGuard 121.500',
+  unit:'lbs', me:160, pax:160, bags:10,
+  rounds:[{min:30,gal:4},{min:60,gal:5}], resRounds:1, burnC172:5, burnC152:6, resMin:30,
+  logo:'', server:'', proxy:'https://api.allorigins.win/raw?url=',
+  // Basic empty weights from the club table. "mom" is the moment printed in that table.
+  fleet:[['BCO',1575,41.23,64.94],['BCP',1602,41.44,66.14],['BDE',1563,41.19,64.37],['BDY',1576,40.71,63.95],
+    ['BEB',1614,42.21,73.89],['BFN',1625,41.52,73.52],['BFO',1614,41.15,72.64],['BFP',1598,42.08,73.59],
+    ['BFQ',1615,41.75,74.25],['BFS',1617,43.23,75.25],['BFW',1617,41.21,73.67],['BGR',1603,41.08,65.86],
+    ['BFR',1609,41.4,72.88]].map(a=>({cs:'HA-'+a[0],type:'C172',w:a[1],arm:a[2],mom:a[3]}))
+};
+// text printed in the sheet template, replaced by the club settings
+const TPL_CLUB='FLY-COOP', TPL_FREQS=SETUP_DEFAULTS.freqs.split('\n');
 
 const pad=n=>String(n).padStart(2,'0');
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
-const DEFAULTS={type:'C172',callsign:'HA-BEB',date:today(),pic:'',student:'',dep:'LHBS',dest:'',mcs:'',mbew:'',marm:'',mmom:'',
-  people:'2',oPax:'',oRow2:'',oBag1:'',oBag2:'',fmode:'rounds',rlen:'30',rounds:'4',mfuel:'',funit:'gal',oTrip:'',useListed:false,
-  bside:'left',notamIcao:'LHBS',notam:'',wxIcao:'LHBP',metar:'',taf:'',briefing:'',proxy:'https://api.allorigins.win/raw?url=',server:'',nav:{}};
-
-let S=structuredClone(DEFAULTS), custom=[];
 const LS={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-{ const s=LS.get('flycoop-mb-state'); if(s) S=Object.assign(structuredClone(DEFAULTS),s,{date:today(),notam:'',metar:'',taf:''});
-  const c=LS.get('flycoop-mb-aircraft'); if(Array.isArray(c)) custom=c; }
-const aircraftList=()=>BASE_AIRCRAFT.concat(custom);
+
+let CLUB={}, USET=LS.get('mb-setup')||{}, CFG=null, S=null;
+function mergeCfg(){
+  CFG=structuredClone(SETUP_DEFAULTS);
+  for(const src of [CLUB,USET]) for(const [k,v] of Object.entries(src||{})) if(v!==''&&v!=null) CFG[k]=v;
+  if(!Array.isArray(CFG.fleet))CFG.fleet=[];
+  if(!Array.isArray(CFG.rounds)||!CFG.rounds.length)CFG.rounds=structuredClone(SETUP_DEFAULTS.rounds);
+}
+const saveSetup=()=>LS.set('mb-setup',USET);
+const aircraftList=()=>CFG.fleet;
+const roundList=()=>CFG.rounds.filter(r=>num(r.min)!=null&&num(r.gal)!=null);
+
+function flightDefaults(){
+  return {type:'C172',callsign:'',date:today(),pic:'',student:'',dep:CFG.home,dest:'',mcs:'',mbew:'',marm:'',mmom:'',
+    load:'2',mFront:'',mRear:'',oBag1:'',oBag2:'',fmode:'rounds',rlen:String((roundList()[0]||{}).min||''),rounds:'4',
+    mfuel:'',mfuelU:'gal',mtrip:'',mtripU:'gal',useListed:false,
+    notamIcao:CFG.home,notam:'',wxIcao:CFG.wxIcao,metar:'',taf:'',briefing:'',nav:{}};
+}
+function initState(){
+  // one-time move of older saved data into the new settings
+  const old=LS.get('flycoop-mb-state')||null, oldAc=LS.get('flycoop-mb-aircraft');
+  if(!LS.get('mb-setup')){
+    if(old){ if(old.server)USET.server=old.server; if(old.proxy&&old.proxy!==SETUP_DEFAULTS.proxy)USET.proxy=old.proxy }
+    if(Array.isArray(oldAc)&&oldAc.length) USET.fleet=CFG.fleet.concat(oldAc.filter(a=>!CFG.fleet.some(b=>b.cs===a.cs&&b.type===a.type)));
+    saveSetup(); mergeCfg();
+  }
+  S=flightDefaults();
+  if(old){
+    Object.assign(S,old,{date:today(),notam:'',metar:'',taf:''});
+    if(!old.load&&old.people)S.load=old.people;
+    if(!old.mfuelU&&old.funit)S.mfuelU=old.funit;
+    if(old.fmode==='manual'&&!old.mtrip&&old.oTrip)S.mtrip=old.oTrip;
+    for(const k of ['people','oPax','oRow2','funit','oTrip','bside','server','proxy'])delete S[k];
+  }
+}
 
 /* ------------------------------------------------------------------ helpers */
 const num=v=>{if(v===''||v==null)return null;const n=parseFloat(String(v).replace(',','.'));return isFinite(n)?n:null};
 const r1=n=>Math.round(n*10)/10;
-const fmt=(n,d)=>(Math.round(n*Math.pow(10,d))/Math.pow(10,d)).toFixed(d).replace('.',',');
-const fw=n=>{const x=r1(n);return (Number.isInteger(x)?String(x):x.toFixed(1)).replace('.',',')};
+const fmt=(n,d)=>(Math.round(n*Math.pow(10,d))/Math.pow(10,d)).toFixed(d);
+const fw=n=>{const x=r1(n);return Number.isInteger(x)?String(x):x.toFixed(1)};
 const fm=n=>fmt(n,2), fa=n=>fmt(n,2);
-const dof=d=>d?d.replace(/-/g,'.')+'.':'';
+const dmy=iso=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||'');return m?`${m[3]}/${m[2]}/${m[1]}`:''};
+const dof=dmy;
+function parseDmy(t){
+  const m=/^\s*(\d{1,2})[\/.\-\s](\d{1,2})[\/.\-\s](\d{2}|\d{4})\s*$/.exec(t||''); if(!m)return null;
+  let y=+m[3]; if(y<100)y+=2000;
+  const d=new Date(Date.UTC(y,+m[2]-1,+m[1]));
+  if(d.getUTCDate()!==+m[1]||d.getUTCMonth()!==+m[2]-1)return null;
+  return `${y}-${pad(m[2])}-${pad(m[1])}`;
+}
+const hm=min=>{min=Math.max(0,Math.round(min));return `${Math.floor(min/60)} h ${pad(min%60)} min`};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const unitW=v=>v==null?null:(CFG.unit==='kg'?v*KG:v); // people/bag weights -> lbs
 function inPoly(x,y,p){let c=false;for(let i=0,j=p.length-1;i<p.length;j=i++){const [xi,yi]=p[i],[xj,yj]=p[j];if(((yi>y)!=(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi))c=!c}return c}
 // edge points count as inside
 function inEnv(x,y,p){
@@ -381,26 +527,31 @@ function currentAircraft(){
 }
 function compute(){
   const T=TYPES[S.type], ac=currentAircraft();
-  const people=S.people==='1'?1:2;
-  const R={T,ac,rows:{},warn:[],notes:[]};
-  const g=S.rlen==='60'?5:4;
+  const R={T,ac,rows:{},warn:[]};
   const add=(key,w,arm,mom)=>{R.rows[key]={w,arm,mom: mom!=null?mom:(w==null||arm==null?null:w*arm/1000)}};
   // basic empty
-  if(ac&&ac.w!=null&&ac.arm!=null){
-    let mom=ac.w*ac.arm/1000;
-    if(ac.mom!=null&&Math.abs(ac.mom-mom)>0.3){
-      R.listedDiff={listed:ac.mom,calc:mom};
-      if(S.useListed) mom=ac.mom;
+  const acW=ac?num(ac.w):null, acArm=ac?num(ac.arm):null, acMom=ac?num(ac.mom):null;
+  if(acW!=null&&acArm!=null){
+    let mom=acW*acArm/1000;
+    if(acMom!=null&&Math.abs(acMom-mom)>0.3){
+      R.listedDiff={listed:acMom,calc:mom};
+      if(S.useListed) mom=acMom;
     }
-    add('bew',ac.w,ac.arm,mom);
+    add('bew',acW,acArm,mom);
   } else {add('bew',null,null,null);R.warn.push('Enter the basic empty weight and arm for this aircraft.')}
-  const pax=num(S.oPax)??(people===2?320:160);
-  add('pax',pax,T.armPax);
-  if(S.type==='C172'){
-    const r2=num(S.oRow2)??(people===2?20:10);
-    add('row2',r2,T.armRow2);
+  // people
+  let front, rear=null, rearDash=false;
+  if(S.load==='manual'){
+    front=unitW(num(S.mFront)); if(front==null){R.warn.push('Enter the front seat weight.');front=0}
+    if(T.armRow2!=null){rear=unitW(num(S.mRear)); if(rear==null)rearDash=true}
+  } else {
+    const n=S.load==='1'?1:2;
+    front=(unitW(num(CFG.me))??0)+(n===2?(unitW(num(CFG.pax))??0):0);
+    if(T.armRow2!=null) rear=(unitW(num(CFG.bags))??0)*n;
   }
-  const b1=num(S.oBag1),b2=num(S.oBag2);
+  add('pax',front,T.armPax);
+  if(T.armRow2!=null){add('row2',rear,T.armRow2); if(rearDash)R.rows.row2.dash=true}
+  const b1=unitW(num(S.oBag1)),b2=unitW(num(S.oBag2));
   add('bag1',b1,T.armBag1); if(b1==null)R.rows.bag1.dash=true;
   add('bag2',b2,T.armBag2); if(b2==null)R.rows.bag2.dash=true;
   if(b1!=null&&b1>T.maxBag1)R.warn.push(`Baggage area 1 is over its ${T.maxBag1} lbs limit.`);
@@ -411,23 +562,30 @@ function compute(){
   const zw=sum(ks,'w'), zm=sum(ks,'mom');
   add('zfw',zw,zm/zw*1000,zm);
   // fuel
-  let gal;
+  let gal, tripGal;
   if(S.fmode==='manual'){
-    const v=num(S.mfuel); gal=v==null?0:(S.funit==='lbs'?v/T.den:v);
+    const toGal=(v,u)=>v==null?null:u==='lbs'?v/T.den:u==='l'?v/L_PER_GAL:v;
+    gal=toGal(num(S.mfuel),S.mfuelU); tripGal=toGal(num(S.mtrip),S.mtripU);
+    if(gal==null){R.warn.push('Enter the usable fuel on board.');gal=0}
+    if(tripGal==null){R.warn.push('Enter the trip fuel for this flight.');tripGal=0}
   } else {
-    const n=num(S.rounds)??0; gal=n*g+g;
+    const rl=roundList(), rd=rl.find(r=>String(r.min)===String(S.rlen))||rl[0]||{min:0,gal:0};
+    const g=num(rd.gal), n=num(S.rounds)??0, res=num(CFG.resRounds)??0;
+    gal=(n+res)*g; tripGal=g; R.round={min:num(rd.min),g,n,res};
   }
-  R.gal=gal; R.g=g;
+  R.gal=gal; R.tripGal=tripGal;
   add('fuel',gal*T.den,T.armFuel);
   const rw=zw+R.rows.fuel.w, rm=zm+R.rows.fuel.mom;
   add('ramp',rw,rm/rw*1000,rm);
   add('start',-T.startW,null,T.startM); R.rows.start.shownW=T.startW;
   const tw=rw-T.startW, tm=rm+T.startM;
   add('tow',tw,tm/tw*1000,tm);
-  const tripGal=num(S.oTrip)??g; R.tripGal=tripGal;
   add('trip',tripGal*T.den,T.armTrip);
   const lw=tw-R.rows.trip.w, lm=tm-R.rows.trip.mom;
   add('ldw',lw,lm/lw*1000,lm);
+  // endurance (information only)
+  const burn=num(CFG['burn'+S.type]);
+  if(burn>0&&gal>0){R.endur=gal/burn*60; R.maxFlight=Math.max(0,R.endur-(num(CFG.resMin)??0)); R.burn=burn}
   // checks
   if(rw>T.maxRamp)R.warn.push(`Ramp weight ${fw(rw)} lbs is over the ${T.maxRamp} lbs limit.`);
   if(tw>T.maxTOW)R.warn.push(`Take-off weight ${fw(tw)} lbs is over the ${T.maxTOW} lbs limit.`);
@@ -439,7 +597,64 @@ function compute(){
     const p=R.rows[k];R.pts[k]={name:n,x:p.arm,y:p.w,ok:isFinite(p.arm)&&inEnv(p.arm,p.w,T.env)};
     if(isFinite(p.arm)&&!R.pts[k].ok)R.warn.push(`${n} is outside the centre of gravity envelope (${fa(p.arm)} in at ${fw(p.w)} lbs).`);
   }
+  const wi=windInfo(); if(wi&&wi.best&&wi.lim&&wi.best.xc>wi.lim)R.warn.push(`Crosswind on RWY ${wi.best.n} is ${Math.round(wi.best.xc)} kt, above the ${wi.lim} kt demonstrated for the ${T.label}.`);
   return R;
+}
+
+/* ------------------------------------------------------------------ wind */
+function windInfo(){
+  const m=(S.metar||'').toUpperCase().match(/\b(\d{3}|VRB)(\d{2,3})(?:G(\d{2,3}))?(KT|MPS)\b/);
+  if(!m)return null;
+  const k=m[4]==='MPS'?1.944:1, spd=Math.round(+m[2]*k), gst=m[3]?Math.round(+m[3]*k):0, lim=num(CFG['xw'+S.type]);
+  const vr=(S.metar||'').match(/\b(\d{3})V(\d{3})\b/);
+  const W={dir:m[1],spd,gst,lim,vr:vr?[vr[1],vr[2]]:null,rw:[]};
+  if(m[1]==='VRB'||spd===0)return W;
+  const dir=+m[1];
+  const ends=String(CFG.runways||'').toUpperCase().split(/[,;\s]+/).flatMap(p=>p.split('/')).map(s=>s.trim()).filter(s=>/^\d{1,2}[LRC]?$/.test(s));
+  for(const n of [...new Set(ends)]){
+    const hdg=parseInt(n,10)*10, a=(dir-hdg)*Math.PI/180;
+    const xc=Math.abs(Math.max(spd,gst)*Math.sin(a));
+    W.rw.push({n,head:spd*Math.cos(a),cross:Math.abs(spd*Math.sin(a)),gcross:gst?Math.abs(gst*Math.sin(a)):0,xc});
+  }
+  if(W.rw.length)W.best=W.rw.reduce((b,x)=>x.head>b.head?x:b);
+  return W;
+}
+function renderWind(){
+  const box=$('xw'), W=windInfo();
+  if(!W){box.hidden=true;box.innerHTML='';return}
+  box.hidden=false;
+  const g=W.gst?` gusting ${W.gst}`:'';
+  let h;
+  if(W.dir==='VRB'||W.spd===0){
+    h=`<div><span>Wind</span><b>${W.spd===0?'Calm':`Variable ${W.spd} kt${g}`}</b></div>`;
+    if(W.spd>3)h+=`<div><span>Runway</span><b>Any, assume up to ${W.gst||W.spd} kt crosswind</b></div>`;
+  } else {
+    h=`<div><span>Wind</span><b>${W.dir}° ${W.spd} kt${g}${W.vr?` (varying ${W.vr[0]}–${W.vr[1]}°)`:''}</b></div>`;
+    for(const x of W.rw){
+      const over=W.lim&&x.xc>W.lim, hw=x.head>=0?`${Math.round(x.head)} kt head`:`${Math.round(-x.head)} kt TAIL`;
+      h+=`<div><span>RWY ${esc(x.n)}</span><b class="${over?'bad':x===W.best?'good':''}">${hw}, ${Math.round(x.cross)} kt cross${W.gst?` (${Math.round(x.gcross)} in gusts)`:''}${x===W.best?' · favoured':''}${over?` · above ${W.lim} kt`:''}</b></div>`;
+    }
+    if(!W.rw.length)h+=`<div><span>Runway</span><b>Set your runways in Settings</b></div>`;
+  }
+  const wx=(S.wxIcao||'').toUpperCase(), home=(CFG.home||'').toUpperCase();
+  h+=`<small>${wx&&home&&wx!==home?`${esc(wx)} wind applied to ${esc(home)} runways. `:''}${W.lim?`${TYPES[S.type].label} max demonstrated crosswind ${W.lim} kt.`:''}</small>`;
+  box.innerHTML=h;
+}
+// "ddhhmmZ" -> time in ms, assuming the latest such time not in the future
+function obsTime(d,h,mi){
+  const now=new Date(); let t=Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),+d,+h,+mi);
+  if(t>now.getTime()+36e5)t=Date.UTC(now.getUTCFullYear(),now.getUTCMonth()-1,+d,+h,+mi);
+  return t;
+}
+function renderWxAge(){
+  const el=$('wxAge'), parts=[]; let stale=false;
+  const age=t=>{const a=Math.max(0,Math.round((Date.now()-t)/6e4));return a<60?`${a} min`:`${Math.floor(a/60)} h ${pad(a%60)} min`};
+  const m=(S.metar||'').toUpperCase().match(/\b(\d{2})(\d{2})(\d{2})Z\b/);
+  if(m){const t=obsTime(m[1],m[2],m[3]); parts.push(`METAR ${m[2]}:${m[3]} UTC, ${age(t)} old`); if(Date.now()-t>75*6e4)stale=true}
+  const f=(S.taf||'').toUpperCase().match(/\bTAF(?:\s+(?:AMD|COR|RTD))*\s+[A-Z]{4}\s+(\d{2})(\d{2})(\d{2})Z/);
+  if(f){const t=obsTime(f[1],f[2],f[3]); parts.push(`TAF issued ${f[2]}:${f[3]} UTC, ${age(t)} ago`); if(Date.now()-t>7*36e5)stale=true}
+  el.className='hint'+(stale?' stale':'');
+  el.textContent=parts.length?parts.join(' · ')+'.'+(stale?' Not the latest, check again before flight.':''):'';
 }
 
 /* ------------------------------------------------------------------ sheets */
@@ -481,11 +696,25 @@ function setCell(root,t,r,c,text,append){
   if(append){p.insertAdjacentHTML('beforeend',` <span class="v">${esc(text)}</span>`)}
   else {p.innerHTML=`<span class="v">${esc(text)}</span>`;p.style.textAlign='center'}
 }
+function logoHTML(){
+  if(CFG.logo==='none')return '';
+  const src=CFG.logo||LOGO;
+  return `<img src="${esc(src)}" alt=""${CFG.logo?' style="object-fit:contain;object-position:left center"':''}>`;
+}
+function clubText(root){
+  const club=String(CFG.club||'').trim(), fr=String(CFG.freqs||'').split('\n');
+  for(const sp of root.querySelectorAll('table[data-t="navlog"] span')){
+    const t=sp.textContent;
+    if(t.startsWith(TPL_CLUB+' '))sp.textContent=(club?club+' ':'')+t.slice(TPL_CLUB.length+1);
+    const i=TPL_FREQS.indexOf(t); if(i>=0)sp.textContent=(fr[i]||'').trim();
+  }
+}
 
 function buildFront(R){
   const T=R.T, F=FR[S.type], rw=T.rows, ac=R.ac;
   const el=document.createElement('section'); el.className='sheet';
-  el.innerHTML=`<div class="sheetin"><div class="col l">${FR.navlog}<div class="logoRow"><img src="${LOGO}" alt=""></div>${F.check}</div><div class="col r">${F.mb}</div></div>`;
+  el.innerHTML=`<div class="sheetin"><div class="col l">${FR.navlog}<div class="logoRow">${logoHTML()}</div>${F.check}</div><div class="col r">${F.mb}</div></div>`;
+  clubText(el);
   const cs=ac?ac.cs:'';
   // ---- M&B header
   setCell(el,'mb',5,0,S.pic,true); setCell(el,'mb',5,1,S.student,true); setCell(el,'mb',5,2,dof(S.date),true);
@@ -528,11 +757,11 @@ function buildFront(R){
 
 function buildBack(R){
   const ac=R.ac, el=document.createElement('section'); el.className='sheet';
-  const left=S.bside!=='right';
   const lines=(S.briefing||'').split('\n').map(x=>x.trim()).filter(Boolean);
   const nI=esc((S.notamIcao||'').toUpperCase()), wI=esc((S.wxIcao||'').toUpperCase());
-  el.innerHTML=`<div class="sheetin"><div class="back" style="left:calc(3pt*${left?36:438.65})">
-    <div class="bar">FLY-COOP FLIGHT BRIEFING</div>
+  const club=String(CFG.club||'').trim();
+  el.innerHTML=`<div class="sheetin"><div class="back" style="left:calc(3pt*36)">
+    <div class="bar">${esc(club?club+' ':'')}FLIGHT BRIEFING</div>
     <div class="info"><div><div class="lab">Aircraft</div><div class="big">${esc(ac?ac.cs:'')}</div></div><div><div class="lab">Date</div><div class="big">${esc(dof(S.date))}</div></div></div>
     <div class="sec"><div class="lab">NOTAM <span>${nI}</span></div><div class="txt">${esc(S.notam||'')}</div></div>
     <div class="sec"><div class="lab">METAR <span>${wI}</span></div><div class="txt mono">${esc(S.metar||'')}</div></div>
@@ -554,7 +783,7 @@ function render(){
   R=compute();
   const host=document.getElementById('sheets');
   host.replaceChildren(buildFront(R),buildBack(R));
-  fitBack(); renderSummary(); fitPreview();
+  fitBack(); renderSummary(); renderWind(); renderWxAge(); fitPreview();
 }
 function renderSummary(){
   const T=R.T, rows=[['zfw','Zero fuel'],['ramp','Ramp'],['tow','Take-off'],['ldw','Landing']];
@@ -567,15 +796,18 @@ function renderSummary(){
   }
   document.getElementById('calcTable').innerHTML=h;
   document.getElementById('alerts').innerHTML=R.warn.map(w=>`<div class="alert">${esc(w)}</div>`).join('');
-  document.getElementById('fuelHint').textContent=
-    `Usable fuel ${fmt(R.gal,1)} US gal = ${fw(R.rows.fuel.w)} lbs at ${T.den} lbs/gal (${T.fuelName}). ` +
-    (S.fmode==='rounds'?`${num(S.rounds)||0} rounds × ${R.g} gal + ${R.g} gal reserve. `:'')+
+  const rd=R.round;
+  $('fuelHint').textContent=
+    `Usable fuel ${fmt(R.gal,1)} US gal (${fmt(R.gal*L_PER_GAL,1)} l) = ${fw(R.rows.fuel.w)} lbs at ${T.den} lbs/gal (${T.fuelName}). `+
+    (rd?`${rd.n} round${rd.n===1?'':'s'} + ${rd.res} reserve × ${rd.g} gal. `:'')+
     `Trip fuel ${fmt(R.tripGal,1)} gal = ${fw(R.rows.trip.w)} lbs.`;
-  const note=document.getElementById('momNote');
+  $('fuelEndur').textContent=R.endur!=null
+    ?`Endurance ${hm(R.endur)} at ${R.burn} gal/h · max flight ${hm(R.maxFlight)} keeping ${num(CFG.resMin)??0} min reserve · ${fmt(R.gal-R.tripGal,1)} gal left after this flight.`:'';
+  const note=$('momNote');
   if(R.listedDiff){
     note.hidden=false;
     note.innerHTML=`The moment listed for this aircraft (${fm(R.listedDiff.listed)}) differs from weight × arm (${fm(R.listedDiff.calc)}). The sheet uses ${S.useListed?'the listed value':'weight × arm'}. <label style="display:inline-flex;gap:6px;align-items:center;margin-left:6px"><input type="checkbox" id="useListed" ${S.useListed?'checked':''}> use the listed moment</label>`;
-    document.getElementById('useListed').onchange=e=>{S.useListed=e.target.checked;save();render()};
+    $('useListed').onchange=e=>{S.useListed=e.target.checked;save();render()};
   } else note.hidden=true;
 }
 function fitPreview(){
@@ -593,7 +825,7 @@ window.addEventListener('resize',fitPreview);
 const $=id=>document.getElementById(id);
 function save(){const c=Object.assign({},S);delete c.notam;delete c.metar;delete c.taf;LS.set('flycoop-mb-state',c)}
 function refreshCallsigns(){
-  const sel=$('callsign'); const list=aircraftList().filter(a=>a.type===S.type);
+  const sel=$('callsign'); const list=aircraftList().filter(a=>a.type===S.type&&a.cs);
   sel.innerHTML=list.map(a=>`<option value="${esc(a.cs)}">${esc(a.cs)}</option>`).join('')+`<option value="__manual__">Manual entry…</option>`;
   if(!list.some(a=>a.cs===S.callsign)&&S.callsign!=='__manual__') S.callsign=list.length?list[0].cs:'__manual__';
   sel.value=S.callsign;
@@ -603,27 +835,41 @@ function syncControls(){
   for(const el of document.querySelectorAll('[data-k]')){
     const k=el.dataset.k;
     if(el.type==='radio') el.checked=(S[k]===el.value);
-    else if(el.id!=='callsign') el.value=S[k]??'';
+    else if(el.id!=='callsign'&&el.value!==String(S[k]??'')) el.value=S[k]??'';
   }
   refreshCallsigns();
-  const c152=S.type==='C152';
-  $('wRow2').hidden=c152;
-  $('lblPax').textContent=c152?'Pilot and passenger (lbs)':'Pilot and passenger (lbs)';
-  $('wRounds').hidden=S.fmode!=='rounds'; $('wManual').hidden=S.fmode!=='manual';
-  $('oPax').placeholder=S.people==='1'?'160':'320';
-  $('oRow2').placeholder=S.people==='1'?'10':'20';
-  $('oTrip').placeholder=String(S.rlen==='60'?5:4);
+  if(document.activeElement!==$('dateTxt')){$('dateTxt').value=dmy(S.date);$('dateTxt').classList.remove('bad')}
+  const T=TYPES[S.type], hasRear=T.armRow2!=null, u=CFG.unit==='kg'?'kg':'lbs';
+  for(const e of document.querySelectorAll('.unit'))e.textContent='('+u+')';
+  const man=S.load==='manual';
+  $('wFront').hidden=!man; $('wRear').hidden=!man||!hasRear;
+  if(man) $('loadHint').textContent='Enter every weight yourself. An empty rear seat box is lined out.';
+  else {
+    const n=S.load==='1'?1:2, me=num(CFG.me)??0, px=num(CFG.pax)??0, bg=num(CFG.bags)??0;
+    $('loadHint').textContent=`Front seats ${fw(me+(n===2?px:0))} ${u} (${n===2?`you ${fw(me)} + passenger ${fw(px)}`:'you'})`+
+      (hasRear?`, bags on the rear seat ${fw(bg*n)} ${u}`:'')+'. Change these in Settings.';
+  }
+  // round lengths
+  const rl=roundList();
+  if(!rl.some(r=>String(r.min)===String(S.rlen))&&rl.length)S.rlen=String(rl[0].min);
+  $('rlenSeg').innerHTML=rl.map(r=>`<label><input type="radio" name="rlen" value="${esc(r.min)}" data-k="rlen"${String(r.min)===String(S.rlen)?' checked':''}> ${esc(r.min)} min</label>`).join('');
+  $('fRounds').hidden=S.fmode!=='rounds'; $('fManual').hidden=S.fmode!=='manual';
   $('notamLinks').innerHTML=`<a href="https://notams.aim.faa.gov/notamSearch/" target="_blank" rel="noopener">Open FAA NOTAM Search</a>`;
   $('wxLinks').innerHTML=`<a href="https://aviationweather.gov/data/metar/?ids=${encodeURIComponent((S.wxIcao||'').toUpperCase())}&taf=1" target="_blank" rel="noopener">Open ${esc((S.wxIcao||'').toUpperCase())} on aviationweather.gov</a>`;
   for(const el of document.querySelectorAll('[data-n]')){
     const k=el.dataset.n; el.value=(S.nav&&S.nav[k])||''; }
+  const club=String(CFG.club||'').trim();
+  $('appTitle').textContent=(club?club+' ':'')+'M&B and navlog sheet';
+  document.title=(club?club+' ':'')+'M&B Sheet';
   navPlaceholders();
 }
 function navPlaceholders(){
   const ac=R&&R.ac; const T=TYPES[S.type];
   $('n_ac').placeholder=ac?`${T.label}, ${ac.cs}`:T.label;
   $('n_date').placeholder=dof(S.date); $('n_pic').placeholder=S.pic; $('n_dep').placeholder=S.dep;
+  $('dep').placeholder=CFG.home||'';
 }
+let wxHand=false, notamHand=false;
 document.addEventListener('input',e=>{
   const el=e.target;
   if(el.dataset&&el.dataset.k){
@@ -631,15 +877,25 @@ document.addEventListener('input',e=>{
     if(el.type==='radio'){ if(el.checked)S[k]=el.value } else S[k]=el.value;
     if(k==='type'){S.callsign='';}
     if(k==='callsign'||k==='type'){S.useListed=false}
+    if(k==='metar'||k==='taf')wxHand=true; if(k==='notam')notamHand=true;
     save();
-    if(k==='type'||k==='callsign'){syncControls()} else if(['fmode','people','rlen','wxIcao'].includes(k)){syncControls()}
+    if(['type','callsign','fmode','load','rlen','wxIcao'].includes(k))syncControls();
     render(); navPlaceholders();
-    if(k==='wxIcao')lookupSoon('wx'); if(k==='notamIcao')lookupSoon('notam');
+    if(k==='wxIcao'){wxHand=false;lookupSoon('wx')} if(k==='notamIcao'){notamHand=false;lookupSoon('notam')}
   } else if(el.dataset&&el.dataset.n){
     S.nav=S.nav||{}; S.nav[el.dataset.n]=el.value; save(); render();
   }
 });
 document.addEventListener('change',e=>{ if(e.target.id==='callsign'){S.callsign=e.target.value;S.useListed=false;save();syncControls();render()} });
+
+// date as DD/MM/YYYY, with the browser calendar as a helper
+$('dateTxt').addEventListener('input',e=>{
+  const iso=parseDmy(e.target.value); e.target.classList.toggle('bad',!iso&&e.target.value.trim()!=='');
+  if(iso){S.date=iso;save();render();navPlaceholders()}
+});
+$('dateTxt').addEventListener('blur',e=>{e.target.value=dmy(S.date);e.target.classList.remove('bad')});
+$('dateBtn').onclick=()=>{const p=$('datePick');p.value=S.date;try{p.showPicker()}catch(err){p.focus();p.click()}};
+$('datePick').addEventListener('change',e=>{if(e.target.value){S.date=e.target.value;save();syncControls();render()}});
 
 // navlog tables
 (function(){
@@ -663,24 +919,133 @@ for(const t of document.querySelectorAll('.tab')) t.onclick=()=>{
   for(const p of document.querySelectorAll('.pane')) p.classList.toggle('on',p.id==='pane-'+t.dataset.tab);
 };
 
-// aircraft save
+// aircraft save (manual entry -> fleet)
 $('saveAc').onclick=()=>{
   const cs=(S.mcs||'').toUpperCase().trim(), w=num(S.mbew), a=num(S.marm);
   const st=$('acStatus');
   if(!cs||w==null||a==null){st.textContent='Call sign, weight and arm are needed.';return}
-  custom=custom.filter(x=>!(x.cs===cs&&x.type===S.type));
-  custom.push({cs,type:S.type,w,arm:a,mom:num(S.mmom)});
-  LS.set('flycoop-mb-aircraft',custom);
+  const fleet=CFG.fleet.filter(x=>!(x.cs===cs&&x.type===S.type));
+  fleet.push({cs,type:S.type,w,arm:a,mom:num(S.mmom)});
+  USET.fleet=fleet; saveSetup(); mergeCfg(); renderFleet();
   S.callsign=cs; save(); syncControls(); render();
-  $('acStatus').textContent='Saved in this browser.';
+  $('acStatus').textContent='Saved to the fleet in Settings.';
 };
 
-// automatic lookups (METAR, TAF, NOTAM)
-// aviationweather.gov and the FAA NOTAM service do not allow direct browser requests (no CORS), so the chain is:
-// optional own lookup server -> CORS-enabled public sources -> public relay to the official source.
-async function getText(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}
-const relay=url=>{const px=(S.proxy||'').trim();if(!px)throw new Error('no relay');return getText(px+encodeURIComponent(url))};
-const serverUrl=(type,icao)=>{const b=(S.server||'').trim();if(!b)throw new Error('no server');const u=new URL(b);u.searchParams.set('type',type);u.searchParams.set('icao',icao);return u.toString()};
+/* ------------------------------------------------------------------ settings tab */
+function syncSettings(){
+  for(const el of document.querySelectorAll('[data-s]')){
+    const k=el.dataset.s;
+    if(el.type==='radio')el.checked=String(CFG[k])===el.value;
+    else if(document.activeElement!==el) el.value=USET[k]!=null&&USET[k]!==''?USET[k]:'';
+    if(el.type!=='radio'){const d=CLUB[k]!=null&&CLUB[k]!==''?CLUB[k]:SETUP_DEFAULTS[k]; el.placeholder=d==null?'':String(d).split('\n')[0]+(String(d).includes('\n')?' …':'')}
+  }
+  renderRounds(); renderFleet();
+}
+document.addEventListener('input',e=>{
+  const el=e.target; if(!el.dataset||!el.dataset.s)return;
+  const k=el.dataset.s; let v=el.value;
+  if(el.type==='radio'&&!el.checked)return;
+  if(['home','wxIcao'].includes(k))v=v.toUpperCase().trim();
+  if(k==='unit'&&v!==CFG.unit){ // convert the personal weights to the new unit
+    const f=v==='kg'?1/KG:KG;
+    for(const p of ['me','pax','bags']){const n=num(CFG[p]); if(n!=null)USET[p]=Math.round(n*f*10)/10}
+    for(const p of ['mFront','mRear','oBag1','oBag2']){const n=num(S[p]); if(n!=null)S[p]=String(Math.round(n*f*10)/10)}
+    save();
+  }
+  const oldHome=CFG.home, oldWx=CFG.wxIcao;
+  USET[k]=v; saveSetup(); mergeCfg();
+  // follow the new home airfield / weather station on the current sheet if it still had the old one
+  if(k==='home'){ if(S.dep===oldHome||!S.dep)S.dep=CFG.home; if(S.notamIcao===oldHome||!S.notamIcao){S.notamIcao=CFG.home;notamHand=false;lookupSoon('notam')} save() }
+  if(k==='wxIcao'&&(S.wxIcao===oldWx||!S.wxIcao)){S.wxIcao=CFG.wxIcao;save();wxHand=false;lookupSoon('wx')}
+  if(k==='unit')syncSettings();
+  syncControls(); render();
+});
+
+function renderRounds(){
+  $('roundTable').innerHTML='<tr><th>Round length (min)</th><th>Fuel per round (US gal)</th><th></th></tr>'+
+    CFG.rounds.map((r,i)=>`<tr data-i="${i}"><td><input data-rd="min" inputmode="numeric" value="${esc(r.min??'')}" aria-label="Round length in minutes"></td><td><input data-rd="gal" inputmode="decimal" value="${esc(r.gal??'')}" aria-label="Fuel per round in US gallons"></td><td style="width:44px"><button class="btn small" type="button" data-rdel aria-label="Remove this round length">✕</button></td></tr>`).join('');
+}
+$('roundTable').addEventListener('input',e=>{
+  const f=e.target.dataset.rd; if(!f)return;
+  const i=+e.target.closest('tr').dataset.i, rounds=structuredClone(CFG.rounds);
+  rounds[i][f]=num(e.target.value); USET.rounds=rounds; saveSetup(); mergeCfg(); syncControls(); render();
+});
+$('roundTable').addEventListener('click',e=>{
+  if(!e.target.closest('[data-rdel]'))return;
+  const i=+e.target.closest('tr').dataset.i, rounds=structuredClone(CFG.rounds); rounds.splice(i,1);
+  USET.rounds=rounds.length?rounds:''; saveSetup(); mergeCfg(); renderRounds(); syncControls(); render();
+});
+$('addRound').onclick=()=>{USET.rounds=CFG.rounds.concat([{min:null,gal:null}]);saveSetup();mergeCfg();renderRounds();
+  const ins=$('roundTable').querySelectorAll('tr:last-child input'); if(ins[0])ins[0].focus()};
+
+function renderFleet(){
+  const types=Object.keys(TYPES);
+  $('fleetTable').innerHTML='<tr><th>Type</th><th>Call sign</th><th>BEW lbs</th><th>Arm in</th><th>Moment</th><th></th></tr>'+
+    CFG.fleet.map((a,i)=>`<tr data-i="${i}"><td><select data-fl="type" aria-label="Type">${types.map(t=>`<option${t===a.type?' selected':''}>${t}</option>`).join('')}</select></td>`+
+      `<td><input data-fl="cs" value="${esc(a.cs||'')}" autocomplete="off" style="text-transform:uppercase" aria-label="Call sign"></td>`+
+      `<td><input data-fl="w" inputmode="decimal" value="${esc(a.w??'')}" aria-label="Basic empty weight"></td>`+
+      `<td><input data-fl="arm" inputmode="decimal" value="${esc(a.arm??'')}" aria-label="Arm"></td>`+
+      `<td><input data-fl="mom" inputmode="decimal" value="${esc(a.mom??'')}" placeholder="auto" aria-label="Moment"></td>`+
+      `<td style="width:44px"><button class="btn small" type="button" data-fdel aria-label="Remove this aircraft">✕</button></td></tr>`).join('');
+}
+function fleetChanged(){saveSetup();mergeCfg();syncControls();render()}
+$('fleetTable').addEventListener('input',e=>{
+  const f=e.target.dataset.fl; if(!f)return;
+  const i=+e.target.closest('tr').dataset.i, fleet=structuredClone(CFG.fleet), old=fleet[i].cs;
+  fleet[i][f]=f==='cs'?e.target.value.toUpperCase().trim():f==='type'?e.target.value:num(e.target.value);
+  if(f==='cs'&&S.callsign===old)S.callsign=fleet[i].cs;
+  USET.fleet=fleet; fleetChanged();
+});
+$('fleetTable').addEventListener('click',e=>{
+  if(!e.target.closest('[data-fdel]'))return;
+  const i=+e.target.closest('tr').dataset.i, fleet=structuredClone(CFG.fleet), a=fleet[i];
+  if(a.cs&&!confirm(`Remove ${a.cs} from the fleet?`))return;
+  fleet.splice(i,1); USET.fleet=fleet; renderFleet(); fleetChanged();
+});
+$('addAc').onclick=()=>{USET.fleet=CFG.fleet.concat([{type:S.type,cs:'',w:null,arm:null,mom:null}]);saveSetup();mergeCfg();renderFleet();
+  const inp=$('fleetTable').querySelector('tr:last-child input[data-fl="cs"]'); if(inp)inp.focus()};
+$('fleetReset').onclick=()=>{if(!confirm('Replace your fleet list with the club list?'))return;delete USET.fleet;renderFleetAfter()};
+function renderFleetAfter(){saveSetup();mergeCfg();renderFleet();syncControls();render()}
+
+// logo
+$('logoFile').addEventListener('change',e=>{
+  const f=e.target.files[0]; e.target.value=''; if(!f)return;
+  if(f.size>800*1024){$('setStatus').textContent='That image is too large, use one under 800 KB.';return}
+  const rd=new FileReader(); rd.onload=()=>{USET.logo=rd.result;saveSetup();mergeCfg();render();$('setStatus').textContent='Logo saved in this browser.'}; rd.readAsDataURL(f);
+});
+$('logoNone').onclick=()=>{USET.logo='none';saveSetup();mergeCfg();render()};
+$('logoDef').onclick=()=>{delete USET.logo;saveSetup();mergeCfg();render()};
+
+// export / import / reset
+$('setExport').onclick=()=>{
+  const out=structuredClone(CFG); if(!out.logo)delete out.logo;
+  out.rounds=roundList(); out.fleet=out.fleet.filter(a=>a.cs);
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,2)],{type:'application/json'}));
+  a.download='config.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+$('setImport').addEventListener('change',async e=>{
+  const f=e.target.files[0]; e.target.value=''; if(!f)return;
+  try{
+    const o=JSON.parse(await f.text()); if(!o||typeof o!=='object'||Array.isArray(o))throw 0;
+    USET=o; saveSetup(); mergeCfg(); syncSettings(); syncControls(); render(); $('setStatus').textContent='Settings imported.';
+  }catch(err){$('setStatus').textContent='That file is not a settings file.'}
+});
+$('setReset').onclick=()=>{
+  if(!confirm('Reset all settings in this browser to the club defaults?'))return;
+  USET={}; saveSetup(); mergeCfg(); syncSettings(); syncControls(); render(); $('setStatus').textContent='Settings reset.';
+};
+
+/* ------------------------------------------------------------------ automatic lookups (METAR, TAF, NOTAM) */
+// aviationweather.gov and the FAA NOTAM services do not allow direct browser requests (no CORS), so the chain is:
+// own lookup server -> data/ICAO.json kept fresh by the GitHub Action -> CORS-enabled public sources -> public relay.
+async function getText(url){
+  const ctl=new AbortController(), t=setTimeout(()=>ctl.abort(),12000);
+  try{const r=await fetch(url,{cache:'no-store',signal:ctl.signal});if(!r.ok)throw new Error('HTTP '+r.status);return await r.text()}
+  finally{clearTimeout(t)}
+}
+const relay=url=>{const px=(CFG.proxy||'').trim();if(!px)throw new Error('no relay');return getText(px+encodeURIComponent(url))};
+const serverUrl=(type,icao)=>{const b=(CFG.server||'').trim();if(!b)throw new Error('no server');const u=new URL(b);u.searchParams.set('type',type);u.searchParams.set('icao',icao);return u.toString()};
 const htmlText=h=>{const t=document.createElement('textarea');t.innerHTML=h;return t.value};
 function rawFrom(t){
   t=String(t).trim();
@@ -708,6 +1073,19 @@ function parseNotams(html){
   }
   return blocks.join('\n\n').replace(/\n{3,}/g,'\n\n');
 }
+// briefing data this site publishes (data/ICAO.json), only used while it is fresh
+const siteCache={};
+function siteData(icao){
+  const c=siteCache[icao];
+  if(!c||Date.now()-c.t>60000)siteCache[icao]={t:Date.now(),p:getText(`data/${icao}.json`).then(t=>JSON.parse(t))};
+  return siteCache[icao].p;
+}
+async function siteField(icao,field,stampField,maxH){
+  const d=await siteData(icao), at=Date.parse(d&&d[stampField]);
+  if(!d||!isFinite(at)||Date.now()-at>maxH*36e5)throw new Error('stale');
+  if(field==='notam'&&!d.notamOk)throw new Error('no data');
+  return d[field]||'';
+}
 // run sources in order; first non-empty answer wins, an empty answer lets the next source try
 async function chain(steps){
   const failed=[]; let empty=null;
@@ -727,53 +1105,68 @@ const SRC={
   metar:icao=>[
     {name:'your server',fn:async()=>rawFrom(await getText(serverUrl('metar',icao)))},
     {name:'metar.vatsim.net',fn:async()=>{const t=rawFrom(await getText(`https://metar.vatsim.net/${icao}`));return t&&!/^METAR\b/.test(t)?'METAR '+t:t}},
+    {name:'site briefing data',fn:()=>siteField(icao,'metar','wxUpdated',2)},
     {name:'aviationweather.gov (relay)',fn:async()=>rawFrom(await relay(`${AW}metar?ids=${icao}&format=raw`))}],
   taf:icao=>[
     {name:'your server',fn:async()=>rawFrom(await getText(serverUrl('taf',icao)))},
+    {name:'site briefing data',fn:()=>siteField(icao,'taf','wxUpdated',3)},
     {name:'datamask.org',fn:async()=>rawFrom(await getText(`https://datamask.org/api/v1/taf/${icao}`)).replace(/^(TAF\s+)+/,'TAF ')},
     {name:'metars.eu',fn:async()=>rawFrom(await getText(`https://metars.eu/api/tafs/${icao}`)).replace(/^(TAF\s+)+/,'TAF ')},
     {name:'aviationweather.gov (relay)',fn:async()=>rawFrom(await relay(`${AW}taf?ids=${icao}&format=raw`))}],
   notam:icao=>[
     {name:'your server',fn:async()=>await getText(serverUrl('notam',icao))},
+    {name:'site briefing data',fn:()=>siteField(icao,'notam','notamUpdated',24)},
     {name:'FAA NOTAM service (relay)',fn:async()=>parseNotams(await relay(DINS(icao)))}]
 };
-let lookupSeq=0;
-async function lookup(which){
-  const seq=++lookupSeq, set=(id,t)=>{const e=$(id);if(e)e.textContent=t};
-  const stamp=()=>new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+const seq={wx:0,notam:0}; let lastWx=0, lastNotam=0;
+async function lookup(which,auto){
+  const set=(id,t)=>{const e=$(id);if(e)e.textContent=t};
+  const stamp=()=>{const d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())};
   const wx=(S.wxIcao||'').trim().toUpperCase(), nt=(S.notamIcao||'').trim().toUpperCase();
   const jobs=[];
-  if(which!=='notam'&&wx.length===4){
-    set('wxStatus','Looking up METAR and TAF…');
+  if(which!=='notam'&&wx.length===4&&!(auto&&wxHand)){
+    const my=++seq.wx; lastWx=Date.now();
+    if(!auto)set('wxStatus','Looking up METAR and TAF…');
     jobs.push((async()=>{
       const [m,t]=await Promise.allSettled([chain(SRC.metar(wx)),chain(SRC.taf(wx))]);
-      if(seq!==lookupSeq)return;
+      if(my!==seq.wx||(auto&&wxHand))return;
       const parts=[];
       if(m.status==='fulfilled'){S.metar=m.value.text; parts.push(m.value.text?`METAR via ${m.value.src}`:`no METAR published for ${wx}`)}
       else parts.push('METAR failed ('+m.reason.failed.join(', ')+')');
       if(t.status==='fulfilled'){S.taf=t.value.text; parts.push(t.value.text?`TAF via ${t.value.src}`:`no TAF published for ${wx}`)}
       else parts.push('TAF failed ('+t.reason.failed.join(', ')+')');
       const bad=m.status==='rejected'||t.status==='rejected';
-      set('wxStatus',`${wx} at ${stamp()}: ${parts.join('; ')}.${bad?' Type or paste what is missing, or set a lookup server below.':''}`);
+      if(!bad)wxHand=false;
+      set('wxStatus',`${wx} at ${stamp()}: ${parts.join('; ')}.${bad?' Type or paste what is missing.':''}`);
     })());
   }
-  if(which!=='wx'&&nt.length===4){
-    set('notamStatus','Looking up NOTAMs…');
+  if(which!=='wx'&&nt.length===4&&!(auto&&notamHand)){
+    const my=++seq.notam; lastNotam=Date.now();
+    if(!auto)set('notamStatus','Looking up NOTAMs…');
     jobs.push((async()=>{
       try{
         const r=await chain(SRC.notam(nt));
-        if(seq!==lookupSeq)return;
-        S.notam=r.text;
-        set('notamStatus',r.text?`${nt} loaded at ${stamp()} via ${r.src}.`:`No active NOTAMs found for ${nt} (${r.src}), or the answer was in an unexpected format.`);
-      }catch(e){ if(seq===lookupSeq)set('notamStatus',`NOTAM lookup failed (${(e.failed||[]).join(', ')}). Paste them below, or set a lookup server in the settings.`) }
+        if(my!==seq.notam||(auto&&notamHand))return;
+        S.notam=r.text; notamHand=false;
+        set('notamStatus',r.text?`${nt} loaded at ${stamp()} via ${r.src}.`:`No active NOTAMs found for ${nt} (${r.src}).`);
+      }catch(e){ if(my===seq.notam&&!auto)set('notamStatus',`NOTAM lookup failed (${(e.failed||[]).join(', ')}). Paste them below, or see the lookup options in Settings.`) }
     })());
   }
   await Promise.all(jobs);
-  if(seq===lookupSeq){syncControls();render()}
+  syncControls(); render();
 }
-let lookupTimer=null;
-const lookupSoon=w=>{clearTimeout(lookupTimer);lookupTimer=setTimeout(()=>lookup(w),700)};
-$('btnRefresh').onclick=()=>lookup();
+let lookupTimer={};
+const lookupSoon=w=>{clearTimeout(lookupTimer[w]);lookupTimer[w]=setTimeout(()=>lookup(w),700)};
+$('btnRefresh').onclick=()=>{wxHand=false;notamHand=false;lookup()};
+// keep weather (every 5 min) and NOTAMs (every 30 min) fresh while the page is open, unless typed in by hand
+function autoRefresh(){
+  if(document.hidden)return;
+  if(Date.now()-lastWx>5*6e4)lookup('wx',true);
+  if(Date.now()-lastNotam>30*6e4)lookup('notam',true);
+  renderWxAge();
+}
+setInterval(autoRefresh,60*1000);
+document.addEventListener('visibilitychange',autoRefresh);
 
 // preview / print
 const showPrev=on=>{document.body.classList.toggle('showprev',on);setTimeout(fitPreview,0)};
@@ -782,8 +1175,13 @@ $('btnClose').onclick=()=>showPrev(false);
 const doPrint=()=>{render();setTimeout(()=>window.print(),50)};
 for(const id of ['btnPrint','btnPrint2','btnPrint3']) $(id).onclick=doPrint;
 
-syncControls(); render(); syncControls(); lookup();
-if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitPreview);
+/* ------------------------------------------------------------------ start */
+(async()=>{
+  try{const r=await fetch('config.json',{cache:'no-store'}); if(r.ok){const c=await r.json(); if(c&&typeof c==='object')CLUB=c}}catch(e){}
+  mergeCfg(); initState();
+  syncSettings(); syncControls(); render(); syncControls(); lookup();
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitPreview);
+})();
 </script>
 </body>
 </html>

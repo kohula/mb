@@ -11,14 +11,14 @@
 /* ---------- UI tokens (the printed sheets use their own fixed black/white look) ---------- */
 :root{
   --bg:#f3f5f7; --panel:#ffffff; --ink:#15202b; --muted:#5d6b7a; --line:#d5dbe1;
-  --accent:#0b5cad; --accent-ink:#ffffff; --ok:#1a7f4b; --warn:#b3261e; --warn-bg:#fdecea; --ok-bg:#e6f4ec; --field:#fbfcfd;
+  --accent:#0b5cad; --accent-ink:#ffffff; --ok:#1a7f4b; --warn:#b3261e; --warn-bg:#fdecea; --ok-bg:#e6f4ec; --field:#fbfcfd; --accent-soft:#e4eefa;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#10161c; --panel:#18212a; --ink:#e7edf3; --muted:#9aa8b6; --line:#2c3844;
-  --accent:#6db3f2; --accent-ink:#06223d; --ok:#5fd394; --warn:#ff8a80; --warn-bg:#3a1f1d; --ok-bg:#16301f; --field:#121a22; color-scheme:dark}}
+  --accent:#6db3f2; --accent-ink:#06223d; --ok:#5fd394; --warn:#ff8a80; --warn-bg:#3a1f1d; --ok-bg:#16301f; --field:#121a22; --accent-soft:#132c45; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#10161c; --panel:#18212a; --ink:#e7edf3; --muted:#9aa8b6; --line:#2c3844;
-  --accent:#6db3f2; --accent-ink:#06223d; --ok:#5fd394; --warn:#ff8a80; --warn-bg:#3a1f1d; --ok-bg:#16301f; --field:#121a22; color-scheme:dark}
+  --accent:#6db3f2; --accent-ink:#06223d; --ok:#5fd394; --warn:#ff8a80; --warn-bg:#3a1f1d; --ok-bg:#16301f; --field:#121a22; --accent-soft:#132c45; color-scheme:dark}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
@@ -77,6 +77,15 @@ h2{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mu
 .btn.icon{display:inline-flex;align-items:center;justify-content:center;min-width:40px;padding:.25rem .5rem}
 .f input.hiddenpick{position:absolute;right:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
 input.bad{border-color:var(--warn)!important;outline-color:var(--warn)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{display:inline-flex;align-items:baseline;gap:.35em;background:var(--accent-soft);color:var(--accent);border-radius:99px;padding:.22rem .7rem;font-size:.82rem;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip i{font-style:normal;font-weight:500;opacity:.8}
+.chip.bad{background:var(--warn-bg);color:var(--warn)}
+.f input[readonly]{background:transparent;border-style:dashed;color:var(--muted)}
+.wind{display:flex;gap:12px;align-items:center;margin-top:8px}
+.wind svg{flex:none;width:140px;height:140px}
+.wind .xw{flex:1;margin-top:0;min-width:0}
+@media (max-width:420px){.wind{flex-direction:column;align-items:stretch}.wind svg{align-self:center}}
 .xw{display:grid;gap:4px;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:.5rem .65rem;margin-top:8px;font-size:.88rem;font-variant-numeric:tabular-nums}
 .xw div{display:grid;grid-template-columns:70px 1fr;gap:8px}
 .xw span{color:var(--muted);font-size:.8rem}
@@ -175,11 +184,7 @@ code{font-size:.9em;background:var(--field);border:1px solid var(--line);border-
     <section class="pane on" id="pane-mb">
       <div class="card">
         <h2>Flight</h2>
-        <div class="grid">
-          <label class="f">Aircraft type
-            <select id="type" data-k="type"><option value="C172">Cessna 172</option><option value="C152">Cessna 152</option></select></label>
-          <label class="f">Call sign
-            <select id="callsign" data-k="callsign"></select></label>
+        <div class="grid c2">
           <div class="f">Date of flight
             <span class="row" style="gap:6px;flex-wrap:nowrap;position:relative">
               <input id="dateTxt" inputmode="numeric" placeholder="DD/MM/YYYY" autocomplete="off" aria-label="Date of flight, DD/MM/YYYY" style="flex:1">
@@ -187,22 +192,29 @@ code{font-size:.9em;background:var(--field);border:1px solid var(--line);border-
               <input type="date" id="datePick" tabindex="-1" aria-hidden="true" class="hiddenpick">
             </span>
           </div>
-        </div>
-        <div class="grid c2" style="margin-top:10px">
+          <label class="f">DEP <input id="dep" data-k="dep" autocomplete="off" style="text-transform:uppercase"></label>
           <label class="f">PIC <input id="pic" data-k="pic" autocomplete="off"></label>
           <label class="f">Student pilot / group <input id="student" data-k="student" autocomplete="off"></label>
-          <label class="f">DEP <input id="dep" data-k="dep" autocomplete="off"></label>
           <label class="f">DEST on M&amp;B <input id="dest" data-k="dest" autocomplete="off" placeholder="leave empty to write by hand"></label>
         </div>
-        <div id="manualBox" hidden>
-          <div class="grid" style="margin-top:10px">
-            <label class="f">Call sign (manual) <input id="mcs" data-k="mcs" placeholder="HA-XXX" autocomplete="off"></label>
-            <label class="f">Basic empty weight (lbs) <input id="mbew" data-k="mbew" inputmode="decimal"></label>
-            <label class="f">Arm (in) <input id="marm" data-k="marm" inputmode="decimal"></label>
-            <label class="f">Moment (optional) <input id="mmom" data-k="mmom" inputmode="decimal" placeholder="weight × arm"></label>
-          </div>
-          <div class="row" style="margin-top:8px"><button class="btn small" id="saveAc" type="button">Save this aircraft to the fleet</button><span class="status" id="acStatus"></span></div>
+      </div>
+
+      <div class="card">
+        <h2>Aircraft</h2>
+        <div class="grid c2">
+          <label class="f">Type
+            <select id="type" data-k="type"><option value="C172">Cessna 172</option><option value="C152">Cessna 152</option></select></label>
+          <label class="f">Call sign
+            <select id="callsign" data-k="callsign"></select></label>
         </div>
+        <div class="grid" style="margin-top:10px">
+          <label class="f" id="wMcs" hidden>Call sign (manual) <input id="mcs" data-k="mcs" placeholder="HA-XXX" autocomplete="off" style="text-transform:uppercase"></label>
+          <label class="f">Empty weight (lbs) <input id="mbew" data-k="mbew" inputmode="decimal"></label>
+          <label class="f">Arm (in) <input id="marm" data-k="marm" inputmode="decimal"></label>
+          <label class="f">Moment <input id="mmom" data-k="mmom" inputmode="decimal"></label>
+        </div>
+        <div class="row" id="saveRow" style="margin-top:8px" hidden><button class="btn small" id="saveAc" type="button">Save this aircraft to the fleet</button><span class="status" id="acStatus"></span></div>
+        <p class="hint" id="acHint"></p>
         <div class="note" id="momNote" hidden></div>
       </div>
 
@@ -213,38 +225,32 @@ code{font-size:.9em;background:var(--field);border:1px solid var(--line);border-
           <label><input type="radio" name="load" value="2" data-k="load"> 2 people</label>
           <label><input type="radio" name="load" value="manual" data-k="load"> Manual</label>
         </div>
-        <p class="hint" id="loadHint"></p>
         <div class="grid" style="margin-top:10px">
-          <label class="f" id="wFront" hidden><span>Front seats <span class="unit"></span></span> <input id="mFront" data-k="mFront" inputmode="decimal"></label>
-          <label class="f" id="wRear" hidden><span>Rear seats <span class="unit"></span></span> <input id="mRear" data-k="mRear" inputmode="decimal" placeholder="–"></label>
+          <label class="f" id="wFront"><span>Front seats <span class="unit"></span></span> <input id="mFront" data-k="mFront" inputmode="decimal"></label>
+          <label class="f" id="wRear"><span>Rear seats <span class="unit"></span></span> <input id="mRear" data-k="mRear" inputmode="decimal"></label>
           <label class="f"><span>Baggage area 1 <span class="unit"></span></span> <input id="oBag1" data-k="oBag1" inputmode="decimal" placeholder="–"></label>
           <label class="f"><span>Baggage aft area 2 <span class="unit"></span></span> <input id="oBag2" data-k="oBag2" inputmode="decimal" placeholder="–"></label>
         </div>
-        <p class="hint">Empty baggage boxes are lined out on the sheet.</p>
+        <p class="hint" id="loadHint"></p>
       </div>
 
       <div class="card">
         <h2>Fuel</h2>
-        <div class="seg" role="radiogroup" aria-label="Fuel mode">
-          <label><input type="radio" name="fmode" value="rounds" data-k="fmode"> From rounds</label>
-          <label><input type="radio" name="fmode" value="manual" data-k="fmode"> Manual</label>
-        </div>
-        <div id="fRounds">
-          <div class="seg" role="radiogroup" aria-label="Round length" id="rlenSeg" style="margin-top:10px"></div>
-          <div class="grid" style="margin-top:10px">
-            <label class="f">Rounds today (including yours) <input id="rounds" data-k="rounds" type="number" min="0" max="20" step="1" inputmode="numeric"></label>
+        <div class="row" style="gap:10px">
+          <div class="seg" role="radiogroup" aria-label="Fuel mode">
+            <label><input type="radio" name="fmode" value="rounds" data-k="fmode"> From rounds</label>
+            <label><input type="radio" name="fmode" value="manual" data-k="fmode"> Manual</label>
           </div>
+          <div class="seg" role="radiogroup" aria-label="Round length" id="rlenSeg"></div>
         </div>
-        <div id="fManual" hidden>
-          <div class="grid c2" style="margin-top:10px">
-            <label class="f">Usable fuel on board
-              <span class="row" style="gap:6px;flex-wrap:nowrap"><input id="mfuel" data-k="mfuel" inputmode="decimal" style="flex:1"><select id="mfuelU" data-k="mfuelU" style="width:5.5em;flex:none" aria-label="Unit"><option value="gal">US gal</option><option value="l">litres</option><option value="lbs">lbs</option></select></span></label>
-            <label class="f">Trip fuel for this flight
-              <span class="row" style="gap:6px;flex-wrap:nowrap"><input id="mtrip" data-k="mtrip" inputmode="decimal" style="flex:1"><select id="mtripU" data-k="mtripU" style="width:5.5em;flex:none" aria-label="Unit"><option value="gal">US gal</option><option value="l">litres</option><option value="lbs">lbs</option></select></span></label>
-          </div>
+        <div class="grid" style="margin-top:10px;grid-template-columns:repeat(auto-fit,minmax(165px,1fr))">
+          <label class="f" id="wRounds">Rounds today (incl. yours) <input id="rounds" data-k="rounds" type="number" min="0" max="20" step="1" inputmode="numeric"></label>
+          <label class="f">Usable fuel
+            <span class="row" style="gap:6px;flex-wrap:nowrap"><input id="mfuel" data-k="mfuel" inputmode="decimal" style="flex:1"><select id="mfuelU" data-k="mfuelU" style="width:5em;flex:none" aria-label="Unit"><option value="gal">gal</option><option value="l">l</option><option value="lbs">lbs</option></select></span></label>
+          <label class="f">Trip fuel
+            <span class="row" style="gap:6px;flex-wrap:nowrap"><input id="mtrip" data-k="mtrip" inputmode="decimal" style="flex:1"><select id="mtripU" data-k="mtripU" style="width:5em;flex:none" aria-label="Unit"><option value="gal">gal</option><option value="l">l</option><option value="lbs">lbs</option></select></span></label>
         </div>
-        <p class="hint" id="fuelHint"></p>
-        <p class="hint small" id="fuelEndur"></p>
+        <div class="chips" id="fuelChips"></div>
       </div>
 
       <div class="card">
@@ -320,7 +326,8 @@ code{font-size:.9em;background:var(--field);border:1px solid var(--line);border-
         </div>
         <div class="status" id="wxStatus" style="margin-top:6px"></div>
         <label class="f" style="margin-top:6px">METAR <textarea id="metar" data-k="metar"></textarea></label>
-        <div class="xw" id="xw" hidden></div>
+        <div class="wind" id="windBox" hidden><svg id="rose" viewBox="-60 -60 120 120" role="img" aria-label="Wind and runways"></svg><div class="xw" id="xw"></div></div>
+        <label class="f" style="margin-top:10px"><span id="lblRwy">Runways</span> <input id="rwy" data-k="rwy" autocomplete="off" style="text-transform:uppercase"></label>
         <label class="f" style="margin-top:10px">TAF <textarea id="taf" data-k="taf" style="min-height:6em"></textarea></label>
         <p class="hint" id="wxAge"></p>
         <div class="links" id="wxLinks"></div>
@@ -371,10 +378,10 @@ code{font-size:.9em;background:var(--field);border:1px solid var(--line);border-
           <label class="f">Club name on the sheets <input data-s="club" autocomplete="off"></label>
           <label class="f">Home airfield (DEP, NOTAM) <input data-s="home" maxlength="4" autocomplete="off" style="text-transform:uppercase"></label>
           <label class="f">Weather station <input data-s="wxIcao" maxlength="4" autocomplete="off" style="text-transform:uppercase"></label>
-          <label class="f">Runways <input data-s="runways" autocomplete="off" placeholder="09/27, 13/31"></label>
           <label class="f">C172 max crosswind (kt) <input data-s="xwC172" inputmode="decimal"></label>
           <label class="f">C152 max crosswind (kt) <input data-s="xwC152" inputmode="decimal"></label>
         </div>
+        <label class="f" style="margin-top:10px">Runways, one airfield per line (e.g. LHBS 09/27) <textarea data-s="runways" style="min-height:4.5em"></textarea></label>
         <label class="f" style="margin-top:10px">Navlog frequencies, one per line (5 lines) <textarea data-s="freqs" style="min-height:7em"></textarea></label>
         <div class="row" style="margin-top:10px">
           <span class="hint" style="margin:0">Logo on the front page:</span>
@@ -436,7 +443,7 @@ const TYPES = {
 const KG=2.20462, L_PER_GAL=3.78541;
 // Built-in setup. config.json next to index.html (club defaults) and the Settings tab (this browser) override it.
 const SETUP_DEFAULTS={
-  club:'FLY-COOP', home:'LHBS', wxIcao:'LHBP', runways:'09/27', xwC172:15, xwC152:12,
+  club:'FLY-COOP', home:'LHBS', wxIcao:'LHBP', runways:'LHBS 09/27\nLHBP 13L/31R 13R/31L', xwC172:15, xwC152:12,
   freqs:'BUDAÖRS INF 124.510\nNORTH INF. 119.350\nWEST INF. 125.500\nEAST INF. 133.000\nGuard 121.500',
   unit:'lbs', me:160, pax:160, bags:10,
   rounds:[{min:30,gal:4},{min:60,gal:5}], resRounds:1, burnC172:5, burnC152:6, resMin:30,
@@ -469,7 +476,7 @@ function flightDefaults(){
   return {type:'C172',callsign:'',date:today(),pic:'',student:'',dep:CFG.home,dest:'',mcs:'',mbew:'',marm:'',mmom:'',
     load:'2',mFront:'',mRear:'',oBag1:'',oBag2:'',fmode:'rounds',rlen:String((roundList()[0]||{}).min||''),rounds:'4',
     mfuel:'',mfuelU:'gal',mtrip:'',mtripU:'gal',useListed:false,
-    notamIcao:CFG.home,notam:'',wxIcao:CFG.wxIcao,metar:'',taf:'',briefing:'',nav:{}};
+    notamIcao:CFG.home,notam:'',wxIcao:CFG.wxIcao,metar:'',taf:'',rwy:'',briefing:'',nav:{}};
 }
 function initState(){
   // one-time move of older saved data into the new settings
@@ -518,6 +525,20 @@ function inEnv(x,y,p){
   return false}
 
 /* ------------------------------------------------------------------ calculation */
+// values used when a box is left empty: settings for 1 / 2 people, the rounds for fuel; none in manual mode
+function presets(){
+  if(S.load==='manual')return {front:null,rear:null};
+  const n=S.load==='1'?1:2;
+  return {front:(num(CFG.me)??0)+(n===2?(num(CFG.pax)??0):0), rear:(num(CFG.bags)??0)*n};
+}
+const toGal=(v,u,T)=>v==null?null:u==='lbs'?v/T.den:u==='l'?v/L_PER_GAL:v;
+const fromGal=(g,u,T)=>u==='lbs'?g*T.den:u==='l'?g*L_PER_GAL:g;
+function fuelPresets(T){
+  if(S.fmode==='manual')return {gal:null,trip:null};
+  const rl=roundList(), rd=rl.find(r=>String(r.min)===String(S.rlen))||rl[0]||{min:0,gal:0};
+  const g=num(rd.gal)??0, n=num(S.rounds)??0, res=num(CFG.resRounds)??0;
+  return {gal:(n+res)*g, trip:g};
+}
 function currentAircraft(){
   if(S.callsign==='__manual__'){
     const w=num(S.mbew),a=num(S.marm);
@@ -540,15 +561,11 @@ function compute(){
     add('bew',acW,acArm,mom);
   } else {add('bew',null,null,null);R.warn.push('Enter the basic empty weight and arm for this aircraft.')}
   // people
-  let front, rear=null, rearDash=false;
-  if(S.load==='manual'){
-    front=unitW(num(S.mFront)); if(front==null){R.warn.push('Enter the front seat weight.');front=0}
-    if(T.armRow2!=null){rear=unitW(num(S.mRear)); if(rear==null)rearDash=true}
-  } else {
-    const n=S.load==='1'?1:2;
-    front=(unitW(num(CFG.me))??0)+(n===2?(unitW(num(CFG.pax))??0):0);
-    if(T.armRow2!=null) rear=(unitW(num(CFG.bags))??0)*n;
-  }
+  const P=presets(); let rearDash=false;
+  let front=unitW(num(S.mFront)??P.front);
+  if(front==null){R.warn.push('Enter the front seat weight.');front=0}
+  let rear=null;
+  if(T.armRow2!=null){rear=unitW(num(S.mRear)??P.rear); if(rear==null)rearDash=true}
   add('pax',front,T.armPax);
   if(T.armRow2!=null){add('row2',rear,T.armRow2); if(rearDash)R.rows.row2.dash=true}
   const b1=unitW(num(S.oBag1)),b2=unitW(num(S.oBag2));
@@ -562,17 +579,10 @@ function compute(){
   const zw=sum(ks,'w'), zm=sum(ks,'mom');
   add('zfw',zw,zm/zw*1000,zm);
   // fuel
-  let gal, tripGal;
-  if(S.fmode==='manual'){
-    const toGal=(v,u)=>v==null?null:u==='lbs'?v/T.den:u==='l'?v/L_PER_GAL:v;
-    gal=toGal(num(S.mfuel),S.mfuelU); tripGal=toGal(num(S.mtrip),S.mtripU);
-    if(gal==null){R.warn.push('Enter the usable fuel on board.');gal=0}
-    if(tripGal==null){R.warn.push('Enter the trip fuel for this flight.');tripGal=0}
-  } else {
-    const rl=roundList(), rd=rl.find(r=>String(r.min)===String(S.rlen))||rl[0]||{min:0,gal:0};
-    const g=num(rd.gal), n=num(S.rounds)??0, res=num(CFG.resRounds)??0;
-    gal=(n+res)*g; tripGal=g; R.round={min:num(rd.min),g,n,res};
-  }
+  const FP=fuelPresets(T);
+  let gal=toGal(num(S.mfuel),S.mfuelU,T)??FP.gal, tripGal=toGal(num(S.mtrip),S.mtripU,T)??FP.trip;
+  if(gal==null){R.warn.push('Enter the usable fuel on board.');gal=0}
+  if(tripGal==null){R.warn.push('Enter the trip fuel for this flight.');tripGal=0}
   R.gal=gal; R.tripGal=tripGal;
   add('fuel',gal*T.den,T.armFuel);
   const rw=zw+R.rows.fuel.w, rm=zm+R.rows.fuel.mom;
@@ -602,6 +612,24 @@ function compute(){
 }
 
 /* ------------------------------------------------------------------ wind */
+// runways from Settings, one airfield per line ("LHBS 09/27"); a line without an ICAO code belongs to the home airfield
+function rwyMap(){
+  const m={};
+  for(const line of String(CFG.runways||'').toUpperCase().split(/\n+/)){
+    const t=line.trim(); if(!t)continue;
+    const x=/^([A-Z]{4})\b[\s:,-]*(.*)$/.exec(t);
+    if(x)m[x[1]]=x[2].trim(); else m[(CFG.home||'').toUpperCase()]=t;
+  }
+  return m;
+}
+const rwyEnds=list=>[...new Set(String(list||'').toUpperCase().split(/[,;\s]+/).flatMap(p=>p.split('/')).map(s=>s.trim()).filter(s=>/^\d{1,2}[LRC]?$/.test(s)&&+s.replace(/\D/g,'')>=1&&+s.replace(/\D/g,'')<=36))];
+// which airfield's runways: the departure airfield, else the weather station
+function rwyFor(){
+  const m=rwyMap(), dep=(S.dep||'').trim().toUpperCase(), wx=(S.wxIcao||'').trim().toUpperCase();
+  const at=m[dep]?dep:m[wx]?wx:(dep||wx);
+  const saved=m[at]||'';
+  return {at, saved, list:(S.rwy||'').trim()||saved};
+}
 function windInfo(){
   const m=(S.metar||'').toUpperCase().match(/\b(\d{3}|VRB)(\d{2,3})(?:G(\d{2,3}))?(KT|MPS)\b/);
   if(!m)return null;
@@ -610,8 +638,8 @@ function windInfo(){
   const W={dir:m[1],spd,gst,lim,vr:vr?[vr[1],vr[2]]:null,rw:[]};
   if(m[1]==='VRB'||spd===0)return W;
   const dir=+m[1];
-  const ends=String(CFG.runways||'').toUpperCase().split(/[,;\s]+/).flatMap(p=>p.split('/')).map(s=>s.trim()).filter(s=>/^\d{1,2}[LRC]?$/.test(s));
-  for(const n of [...new Set(ends)]){
+  const ends=rwyEnds(rwyFor().list);
+  for(const n of ends){
     const hdg=parseInt(n,10)*10, a=(dir-hdg)*Math.PI/180;
     const xc=Math.abs(Math.max(spd,gst)*Math.sin(a));
     W.rw.push({n,head:spd*Math.cos(a),cross:Math.abs(spd*Math.sin(a)),gcross:gst?Math.abs(gst*Math.sin(a)):0,xc});
@@ -619,10 +647,32 @@ function windInfo(){
   if(W.rw.length)W.best=W.rw.reduce((b,x)=>x.head>b.head?x:b);
   return W;
 }
+function roseSVG(W){
+  const ends=rwyEnds(rwyFor().list), r=46;
+  const P=(deg,rad)=>[Math.sin(deg*Math.PI/180)*rad, -Math.cos(deg*Math.PI/180)*rad];
+  let s=`<circle r="${r}" fill="var(--field)" stroke="var(--line)"/>`;
+  for(let d=0;d<360;d+=30){const [x1,y1]=P(d,r-(d%90?3:6)),[x2,y2]=P(d,r);s+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="var(--muted)" stroke-width="${d%90?1:1.6}"/>`}
+  for(const [t,d] of [['N',0],['E',90],['S',180],['W',270]]){const [x,y]=P(d,r+8);s+=`<text x="${x.toFixed(1)}" y="${(y+3.5).toFixed(1)}" font-size="10" font-weight="700" text-anchor="middle" fill="var(--muted)">${t}</text>`}
+  // runways: one strip per pair, numbers at each end
+  const done=new Set();
+  for(const n of ends){
+    const h=parseInt(n,10)*10%180; if(done.has(h))continue; done.add(h);
+    s+=`<g transform="rotate(${h})"><rect x="-4" y="-30" width="8" height="60" rx="1.5" fill="var(--muted)" opacity=".55"/><line x1="0" y1="-26" x2="0" y2="26" stroke="var(--panel)" stroke-width="1" stroke-dasharray="4 3"/></g>`;
+  }
+  for(const n of ends){const d=parseInt(n,10)*10,[x,y]=P(d+180,37);s+=`<text x="${x.toFixed(1)}" y="${(y+3).toFixed(1)}" font-size="8" font-weight="700" text-anchor="middle" fill="var(--ink)">${esc(n)}</text>`}
+  if(W.vr){const a=+W.vr[0],b=+W.vr[1],[x1,y1]=P(a,r-2),[x2,y2]=P(b,r-2),span=((b-a)+360)%360;s+=`<path d="M${x1.toFixed(1)} ${y1.toFixed(1)}A${r-2} ${r-2} 0 ${span>180?1:0} 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" fill="none" stroke="var(--accent)" stroke-width="3" opacity=".45"/>`}
+  if(W.dir!=='VRB'&&W.spd>0){
+    // arrow blowing from the wind direction towards the centre
+    const d=+W.dir;
+    s+=`<g transform="rotate(${d})"><line x1="0" y1="${-r+2}" x2="0" y2="-9" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/><path d="M0 -3 L-6 -13 L6 -13 Z" fill="var(--accent)"/></g>`;
+  }
+  if(W.dir==='VRB'||W.spd===0)s+=`<text x="0" y="4" font-size="10" font-weight="700" text-anchor="middle" fill="var(--accent)" paint-order="stroke" stroke="var(--field)" stroke-width="3">${W.spd===0?'CALM':'VRB '+W.spd}</text>`;
+  return s;
+}
 function renderWind(){
-  const box=$('xw'), W=windInfo();
-  if(!W){box.hidden=true;box.innerHTML='';return}
-  box.hidden=false;
+  const box=$('xw'), W=windInfo(), wrap=$('windBox');
+  if(!W){wrap.hidden=true;box.innerHTML='';return}
+  wrap.hidden=false; $('rose').innerHTML=roseSVG(W);
   const g=W.gst?` gusting ${W.gst}`:'';
   let h;
   if(W.dir==='VRB'||W.spd===0){
@@ -634,10 +684,10 @@ function renderWind(){
       const over=W.lim&&x.xc>W.lim, hw=x.head>=0?`${Math.round(x.head)} kt head`:`${Math.round(-x.head)} kt TAIL`;
       h+=`<div><span>RWY ${esc(x.n)}</span><b class="${over?'bad':x===W.best?'good':''}">${hw}, ${Math.round(x.cross)} kt cross${W.gst?` (${Math.round(x.gcross)} in gusts)`:''}${x===W.best?' · favoured':''}${over?` · above ${W.lim} kt`:''}</b></div>`;
     }
-    if(!W.rw.length)h+=`<div><span>Runway</span><b>Set your runways in Settings</b></div>`;
+    if(!W.rw.length)h+=`<div><span>Runway</span><b>Type the runways below</b></div>`;
   }
-  const wx=(S.wxIcao||'').toUpperCase(), home=(CFG.home||'').toUpperCase();
-  h+=`<small>${wx&&home&&wx!==home?`${esc(wx)} wind applied to ${esc(home)} runways. `:''}${W.lim?`${TYPES[S.type].label} max demonstrated crosswind ${W.lim} kt.`:''}</small>`;
+  const wx=(S.wxIcao||'').trim().toUpperCase(), at=rwyFor().at;
+  h+=`<small>${W.rw.length&&wx&&at&&wx!==at?`${esc(wx)} wind applied to ${esc(at)} runways. `:''}${W.lim?`${TYPES[S.type].label} max demonstrated crosswind ${W.lim} kt.`:''}</small>`;
   box.innerHTML=h;
 }
 // "ddhhmmZ" -> time in ms, assuming the latest such time not in the future
@@ -796,13 +846,13 @@ function renderSummary(){
   }
   document.getElementById('calcTable').innerHTML=h;
   document.getElementById('alerts').innerHTML=R.warn.map(w=>`<div class="alert">${esc(w)}</div>`).join('');
-  const rd=R.round;
-  $('fuelHint').textContent=
-    `Usable fuel ${fmt(R.gal,1)} US gal (${fmt(R.gal*L_PER_GAL,1)} l) = ${fw(R.rows.fuel.w)} lbs at ${T.den} lbs/gal (${T.fuelName}). `+
-    (rd?`${rd.n} round${rd.n===1?'':'s'} + ${rd.res} reserve × ${rd.g} gal. `:'')+
-    `Trip fuel ${fmt(R.tripGal,1)} gal = ${fw(R.rows.trip.w)} lbs.`;
-  $('fuelEndur').textContent=R.endur!=null
-    ?`Endurance ${hm(R.endur)} at ${R.burn} gal/h · max flight ${hm(R.maxFlight)} keeping ${num(CFG.resMin)??0} min reserve · ${fmt(R.gal-R.tripGal,1)} gal left after this flight.`:'';
+  const g1=n=>String(+fmt(n,1)), left=R.gal-R.tripGal, hhmm=m=>{m=Math.max(0,Math.round(m));return Math.floor(m/60)+':'+pad(m%60)};
+  const chip=(label,val,title,bad)=>`<span class="chip${bad?' bad':''}"${title?` title="${esc(title)}"`:''}><i>${label}</i>${val}</span>`;
+  $('fuelChips').innerHTML=
+    chip('Total',`${g1(R.gal)} gal · ${g1(R.gal*L_PER_GAL)} l · ${fw(R.rows.fuel.w)} lbs`,`${T.den} lbs/gal (${T.fuelName})`)+
+    chip('Trip',`${g1(R.tripGal)} gal · ${fw(R.rows.trip.w)} lbs`)+
+    chip('Left',`${g1(left)} gal`,'',left<0)+
+    (R.endur!=null?chip('Endurance',`${hhmm(R.endur)} · max ${hhmm(R.maxFlight)}`,`At ${R.burn} gal/h; max flight keeps ${num(CFG.resMin)??0} min reserve`):'');
   const note=$('momNote');
   if(R.listedDiff){
     note.hidden=false;
@@ -829,7 +879,6 @@ function refreshCallsigns(){
   sel.innerHTML=list.map(a=>`<option value="${esc(a.cs)}">${esc(a.cs)}</option>`).join('')+`<option value="__manual__">Manual entry…</option>`;
   if(!list.some(a=>a.cs===S.callsign)&&S.callsign!=='__manual__') S.callsign=list.length?list[0].cs:'__manual__';
   sel.value=S.callsign;
-  $('manualBox').hidden=S.callsign!=='__manual__';
 }
 function syncControls(){
   for(const el of document.querySelectorAll('[data-k]')){
@@ -841,19 +890,30 @@ function syncControls(){
   if(document.activeElement!==$('dateTxt')){$('dateTxt').value=dmy(S.date);$('dateTxt').classList.remove('bad')}
   const T=TYPES[S.type], hasRear=T.armRow2!=null, u=CFG.unit==='kg'?'kg':'lbs';
   for(const e of document.querySelectorAll('.unit'))e.textContent='('+u+')';
-  const man=S.load==='manual';
-  $('wFront').hidden=!man; $('wRear').hidden=!man||!hasRear;
-  if(man) $('loadHint').textContent='Enter every weight yourself. An empty rear seat box is lined out.';
-  else {
-    const n=S.load==='1'?1:2, me=num(CFG.me)??0, px=num(CFG.pax)??0, bg=num(CFG.bags)??0;
-    $('loadHint').textContent=`Front seats ${fw(me+(n===2?px:0))} ${u} (${n===2?`you ${fw(me)} + passenger ${fw(px)}`:'you'})`+
-      (hasRear?`, bags on the rear seat ${fw(bg*n)} ${u}`:'')+'. Change these in Settings.';
+  const man=S.load==='manual', P=presets();
+  $('wRear').hidden=!hasRear;
+  $('mFront').placeholder=P.front==null?'':fw(P.front);
+  $('mRear').placeholder=P.rear==null?'–':fw(P.rear);
+  $('loadHint').textContent=man?'Manual: type every weight. Empty baggage and rear seat boxes are lined out.'
+    :'Grey values come from Settings (your weight, passenger, bags), type in a box to change it. Empty baggage boxes are lined out.';
+  // aircraft data: grey and read-only for a fleet aircraft, editable for manual entry
+  const ac=currentAircraft(), mac=S.callsign==='__manual__';
+  $('wMcs').hidden=!mac; $('saveRow').hidden=!mac;
+  for(const [id,k] of [['mbew','w'],['marm','arm'],['mmom','mom']]){
+    const e=$(id); e.readOnly=!mac;
+    if(!mac)e.value=ac&&ac[k]!=null?ac[k]:'';
+    e.placeholder=mac&&id==='mmom'?'weight × arm':(!mac&&id==='mmom'?'weight × arm':'');
   }
+  $('acHint').textContent=mac?'':'From the fleet list in Settings.';
   // round lengths
   const rl=roundList();
   if(!rl.some(r=>String(r.min)===String(S.rlen))&&rl.length)S.rlen=String(rl[0].min);
   $('rlenSeg').innerHTML=rl.map(r=>`<label><input type="radio" name="rlen" value="${esc(r.min)}" data-k="rlen"${String(r.min)===String(S.rlen)?' checked':''}> ${esc(r.min)} min</label>`).join('');
-  $('fRounds').hidden=S.fmode!=='rounds'; $('fManual').hidden=S.fmode!=='manual';
+  const rounds=S.fmode==='rounds', FP=fuelPresets(T);
+  $('rlenSeg').hidden=!rounds; $('wRounds').hidden=!rounds;
+  $('mfuel').placeholder=FP.gal==null?'':String(+fmt(fromGal(FP.gal,S.mfuelU,T),1));
+  $('mtrip').placeholder=FP.trip==null?'':String(+fmt(fromGal(FP.trip,S.mtripU,T),1));
+  const rf=rwyFor(); $('lblRwy').textContent=`Runways at ${rf.at||'the airfield'}`; $('rwy').placeholder=rf.saved||'e.g. 09/27';
   $('notamLinks').innerHTML=`<a href="https://notams.aim.faa.gov/notamSearch/" target="_blank" rel="noopener">Open FAA NOTAM Search</a>`;
   $('wxLinks').innerHTML=`<a href="https://aviationweather.gov/data/metar/?ids=${encodeURIComponent((S.wxIcao||'').toUpperCase())}&taf=1" target="_blank" rel="noopener">Open ${esc((S.wxIcao||'').toUpperCase())} on aviationweather.gov</a>`;
   for(const el of document.querySelectorAll('[data-n]')){
@@ -876,10 +936,12 @@ document.addEventListener('input',e=>{
     const k=el.dataset.k;
     if(el.type==='radio'){ if(el.checked)S[k]=el.value } else S[k]=el.value;
     if(k==='type'){S.callsign='';}
+    if(k==='load'){S.mFront='';S.mRear=''}
+    if(k==='fmode'){S.mfuel='';S.mtrip=''}
     if(k==='callsign'||k==='type'){S.useListed=false}
     if(k==='metar'||k==='taf')wxHand=true; if(k==='notam')notamHand=true;
     save();
-    if(['type','callsign','fmode','load','rlen','wxIcao'].includes(k))syncControls();
+    if(['type','callsign','fmode','load','rlen','rounds','mfuelU','mtripU','dep','rwy','wxIcao'].includes(k))syncControls();
     render(); navPlaceholders();
     if(k==='wxIcao'){wxHand=false;lookupSoon('wx')} if(k==='notamIcao'){notamHand=false;lookupSoon('notam')}
   } else if(el.dataset&&el.dataset.n){

@@ -114,12 +114,18 @@ for (const icao of icaos) {
     d.metar = m.trim(); d.taf = t.trim().replace(/[ \t]*\n[ \t]*/g, '\n'); d.wxUpdated = now;
   } catch (e) { failures++; console.error(icao, 'weather:', e.message); }
   try { d.runways = await runways(icao); } catch (e) { console.error(icao, 'runways:', e.message); }
-  let list = null;
+  let list = null; const errs = [];
   for (const [name, fn] of [['autorouter.aero', autorouterNotams], ['FAA NOTAM Search', faaNotams], ['FAA DINS', dinsNotams]]) {
-    try { list = await fn(icao); d.notamSource = name; break; } catch (e) { console.error(icao, name + ':', e.message); }
+    try { list = await fn(icao); d.notamSource = name; break; } catch (e) { console.error(icao, name + ':', e.message); errs.push(name + ': ' + e.message); }
   }
-  if (list) { d.notam = list.join('\n\n'); d.notamOk = true; d.notamUpdated = now; }
-  else failures++;
+  if (list) { d.notam = list.join('\n\n'); d.notamOk = true; d.notamUpdated = now; delete d.notamError; }
+  else {
+    failures++;
+    d.notamError = /secrets not set/.test(errs[0] || '')
+      ? 'NOTAM source not set up yet: add the AUTOROUTER_USER and AUTOROUTER_PASS secrets (see README).'
+      : 'NOTAM sources failed: ' + errs.join('; ');
+    d.notamErrorAt = now;
+  }
   console.log(icao, `runways ${d.runways ? d.runways.ids.join(' ') || 'none' : '-'}, metar ${d.metar ? 'ok' : '-'}, taf ${d.taf ? 'ok' : '-'}, notams ${list ? list.length + ' via ' + d.notamSource : 'failed'}`);
   await writeFile(file, JSON.stringify(d, null, 1) + '\n');
 }

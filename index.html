@@ -1264,7 +1264,11 @@ async function lookup(which,auto){
         if(my!==seq.notam||(auto&&notamHand))return;
         S.notam=r.text; notamHand=false;
         set('notamStatus',r.text?`${nt} loaded at ${stamp()} via ${r.src}.`:`No active NOTAMs found for ${nt} (${r.src}).`);
-      }catch(e){ if(my===seq.notam&&!auto)set('notamStatus',`NOTAM lookup failed (${(e.failed||[]).join(', ')}). Paste them below, or see the lookup options in Settings.`) }
+      }catch(e){
+        if(my!==seq.notam||auto)return;
+        let why=''; try{const d=await siteData(nt); if(d&&d.notamError)why=' '+d.notamError}catch(x){}
+        set('notamStatus',`NOTAM lookup failed for ${nt}.${why||` Tried: ${(e.failed||[]).join(', ')}.`} Paste them below for now.`);
+      }
     })());
   }
   await Promise.all(jobs);

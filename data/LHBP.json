@@ -1,8 +1,8 @@
 {
  "icao": "LHBP",
- "metar": "METAR LHBP 071600Z VRB02KT CAVOK 05/M02 Q1028 NOSIG",
+ "metar": "METAR LHBP 072130Z VRB02KT CAVOK M03/M04 Q1029 NOSIG",
  "taf": "TAF LHBP 071715Z 0718/0818 VRB03KT CAVOK\nPROB40\nTEMPO 0800/0807 4000 BCFG\nBECMG 0807/0810 09006KT\nBECMG 0815/0818 VRB03KT",
- "wxUpdated": "2026-11-07T18:00:19.026Z",
+ "wxUpdated": "2026-11-07T21:44:38.905Z",
  "runways": {
   "ends": [
    {
@@ -28,5 +28,5 @@
   ]
  },
  "notamError": "NOTAM source not set up yet: add the AUTOROUTER_USER and AUTOROUTER_PASS secrets (see README).",
- "notamErrorAt": "2026-11-07T18:00:19.026Z"
+ "notamErrorAt": "2026-11-07T21:44:38.905Z"
 }

@@ -73,6 +73,13 @@ h2{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mu
 @media (max-width:480px){.tab{padding:.6rem .5rem}}
 
 .hint.small{font-size:.76rem}
+:root{--todo:#b86e00;--todo-bg:#fdf0dc}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--todo:#f0ac4a;--todo-bg:#3a2a12}}
+:root[data-theme="dark"]{--todo:#f0ac4a;--todo-bg:#3a2a12}
+.f .todo,.legs input.todo,textarea.todo{border-color:var(--todo)!important;box-shadow:inset 3px 0 0 var(--todo)}
+.tab .cnt{display:inline-block;min-width:1.4em;margin-left:.35em;padding:0 .4em;border-radius:99px;background:var(--todo-bg);color:var(--todo);font-size:.72rem;font-weight:700;line-height:1.5;text-align:center}
+.todoline{display:flex;gap:.5em;align-items:baseline;background:var(--todo-bg);color:var(--todo);border-radius:6px;padding:.4rem .6rem;font-size:.82rem;margin:0 0 12px}
+.todoline b{font-weight:700}
 .hint.stale{color:var(--warn);font-weight:600}
 .btn.icon{display:inline-flex;align-items:center;justify-content:center;min-width:40px;padding:.25rem .5rem}
 .f input.hiddenpick{position:absolute;right:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}
@@ -132,20 +139,20 @@ code{font-size:.9em;background:var(--field);border:1px solid var(--line);border-
 .wt p.ck .bx{flex:none;width:22pt;height:22pt;border:2.25pt solid #000;margin-right:6pt}
 .logoRow{position:relative;height:40.29pt}
 .logoRow img{position:absolute;left:41.31pt;top:13.14pt;width:261.75pt;height:157.65pt}
-.mbchart{position:absolute}
-/* back page, written in 3x units (see .sheetin) */
-.back{--u:3pt;--fs:10;position:absolute;top:calc(var(--u)*36);bottom:calc(var(--u)*36);width:calc(var(--u)*367.25);display:flex;flex-direction:column;gap:calc(var(--u)*7);font-size:calc(var(--u)*var(--fs));line-height:1.25}
-.back .bar{background:#0d0d0d;color:#fff;font-weight:700;font-size:calc(var(--u)*8);text-align:center;padding:calc(var(--u)*2.2) 0;letter-spacing:calc(var(--u)*.3)}
+.mbchart{position:absolute;left:3%;top:3%;width:94%;height:94%;overflow:visible}
+/* back page, written in 3x units (see .sheetin); same type as the front: 8pt Carlito, bold grey header cells */
+.back{--u:3pt;--fs:9;position:absolute;top:calc(var(--u)*36);bottom:calc(var(--u)*36);width:calc(var(--u)*367.25);display:flex;flex-direction:column;gap:calc(var(--u)*6);font-size:calc(var(--u)*var(--fs));line-height:1.22}
+.back .bar{background:#0d0d0d;color:#fff;font-weight:700;font-size:calc(var(--u)*8);line-height:1.22;text-align:center;padding:calc(var(--u)*2.4) 0;border:calc(var(--u)*.5) solid #000}
 .back .info{display:grid;grid-template-columns:1fr 1fr;border:calc(var(--u)*.5) solid #000}
 .back .info>div{display:flex;flex-direction:column}
 .back .info>div+div{border-left:calc(var(--u)*.5) solid #000}
-.back .lab{background:#d9d9d9;font-weight:700;font-size:calc(var(--u)*8);letter-spacing:calc(var(--u)*.3);padding:calc(var(--u)*2.2) calc(var(--u)*5.4);text-transform:uppercase;border-bottom:calc(var(--u)*.5) solid #000}
-.back .lab span{font-weight:400;letter-spacing:0;text-transform:none}
-.back .big{font-weight:700;font-size:calc(var(--u)*15);padding:calc(var(--u)*5) calc(var(--u)*5.4)}
+.back .lab{background:#d9d9d9;font-weight:700;font-size:calc(var(--u)*8);line-height:1.22;padding:calc(var(--u)*2.4) calc(var(--u)*5.4);text-transform:uppercase;border-bottom:calc(var(--u)*.5) solid #000}
+.back .info .lab{text-align:center}
+.back .lab span{font-weight:400;text-transform:none;margin-left:calc(var(--u)*2)}
+.back .big{font-weight:700;font-size:calc(var(--u)*11);text-align:center;padding:calc(var(--u)*4) calc(var(--u)*5.4)}
 .back .sec{display:flex;flex-direction:column;border:calc(var(--u)*.5) solid #000;min-height:0}
 .back .sec.grow{flex:1 1 0}
-.back .txt{padding:calc(var(--u)*4) calc(var(--u)*5.4);white-space:pre-wrap;overflow-wrap:anywhere;flex:1 1 auto;min-height:calc(var(--u)*34);overflow:hidden}
-.back .txt.mono{letter-spacing:calc(var(--u)*.15)}
+.back .txt{padding:calc(var(--u)*3.5) calc(var(--u)*5.4);white-space:pre-wrap;overflow-wrap:anywhere;flex:1 1 auto;min-height:calc(var(--u)*30);overflow:hidden}
 .back .sec.grow .txt{min-height:calc(var(--u)*80)}
 
 @page{size:A4 landscape;margin:0}
@@ -182,6 +189,7 @@ code{font-size:.9em;background:var(--field);border:1px solid var(--line);border-
       <button class="tab" role="tab" data-tab="set" aria-selected="false">Settings</button>
     </div>
 
+    <p class="todoline" id="todoLine" hidden></p>
     <!-- ================= M&B ================= -->
     <section class="pane on" id="pane-mb">
       <div class="card">
@@ -752,32 +760,31 @@ function renderWxAge(){
 
 /* ------------------------------------------------------------------ sheets */
 function chartSVG(R){
-  const T=R.T,c=T.chart,W=c.w,H=c.h;
-  const L=52,Rm=14,Tp=36,B=41;
-  const pw=W-L-Rm,ph=H-Tp-B;
-  const X=x=>L+(x-c.x0)/(c.x1-c.x0)*pw, Y=y=>Tp+ph-(y-c.y0)/(c.y1-c.y0)*ph;
-  let s=`<svg class="mbchart" xmlns="http://www.w3.org/2000/svg" width="${W*3}pt" height="${H*3}pt" viewBox="0 0 ${W} ${H}" style="left:${c.left*3}pt;top:${c.top*3}pt" font-family="Carlito,Calibri,sans-serif">`;
-  s+=`<rect x=".4" y=".4" width="${W-.8}" height="${H-.8}" fill="#fff" stroke="#d9d9d9" stroke-width=".75"/>`;
-  if(c.xminor){for(let x=c.x0;x<=c.x1+1e-9;x+=c.xminor){s+=`<line x1="${X(x).toFixed(2)}" y1="${Tp}" x2="${X(x).toFixed(2)}" y2="${Tp+ph}" stroke="#f2f2f2" stroke-width=".75"/>`}}
-  for(let x=c.x0;x<=c.x1+1e-9;x+=c.xs)s+=`<line x1="${X(x).toFixed(2)}" y1="${Tp}" x2="${X(x).toFixed(2)}" y2="${Tp+ph}" stroke="#d9d9d9" stroke-width=".75"/>`;
-  for(let y=c.y0;y<=c.y1+1e-9;y+=c.ys)s+=`<line x1="${L}" y1="${Y(y).toFixed(2)}" x2="${L+pw}" y2="${Y(y).toFixed(2)}" stroke="#d9d9d9" stroke-width=".75"/>`;
-  s+=`<line x1="${L}" y1="${Tp}" x2="${L}" y2="${Tp+ph}" stroke="#bfbfbf" stroke-width=".75"/><line x1="${L}" y1="${Tp+ph}" x2="${L+pw}" y2="${Tp+ph}" stroke="#bfbfbf" stroke-width=".75"/>`;
-  for(let x=c.x0;x<=c.x1+1e-9;x+=c.xs)s+=`<text x="${X(x).toFixed(2)}" y="${Tp+ph+12}" font-size="9" fill="#595959" text-anchor="middle">${x}</text>`;
-  for(let y=c.y0;y<=c.y1+1e-9;y+=c.ys)s+=`<text x="${L-5}" y="${(Y(y)+3.2).toFixed(2)}" font-size="9" fill="#595959" text-anchor="end">${y}</text>`;
-  s+=`<text x="${W/2}" y="17" font-size="11" fill="#595959" text-anchor="middle">Centre of Gravity Limits</text>`;
-  s+=`<text x="${L+pw/2}" y="${H-8}" font-size="10" fill="#595959" text-anchor="middle">Airplane C-G. Location - Inches aft of datum</text>`;
-  s+=`<text transform="translate(12 ${Tp+ph/2}) rotate(-90)" font-size="10" fill="#595959" text-anchor="middle">Loaded airplane Weight (Pounds)</text>`;
-  const pts=T.env.map(p=>`${X(p[0]).toFixed(2)},${Y(p[1]).toFixed(2)}`).join(' ');
-  s+=`<polyline points="${pts}" fill="none" stroke="#5b9bd5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`;
-  for(const p of T.env)s+=`<circle cx="${X(p[0]).toFixed(2)}" cy="${Y(p[1]).toFixed(2)}" r="2.5" fill="#5b9bd5"/>`;
-  s+=`<clipPath id="pc"><rect x="${L-8}" y="${Tp-8}" width="${pw+16}" height="${ph+16}"/></clipPath><g clip-path="url(#pc)">`;
-  const lab={tow:[6,-4,'start'],ldw:[6,3,'start'],zfw:[-6,10,'end']};
-  for(const k of ['zfw','ldw','tow']){
-    const p=R.pts[k]; if(!isFinite(p.x)||!isFinite(p.y))continue;
-    const px=X(p.x),py=Y(p.y),a=3.2,col=p.ok?'#000':'#c00000';
-    s+=`<path d="M${px-a} ${py-a}L${px+a} ${py+a}M${px-a} ${py+a}L${px+a} ${py-a}" stroke="${col}" stroke-width="1.3" fill="none"/>`;
-    s+=`<text x="${px+lab[k][0]}" y="${py+lab[k][1]}" font-size="8" font-weight="700" fill="${col}" text-anchor="${lab[k][2]}">${p.name}</text>`;
-  }
+  const T=R.T,c=T.chart, W=330,H=220, L=48,Rm=14,Tp=30,B=40, pw=W-L-Rm, ph=H-Tp-B;
+  const X=x=>L+(x-c.x0)/(c.x1-c.x0)*pw, Y=y=>Tp+ph-(y-c.y0)/(c.y1-c.y0)*ph, f=n=>n.toFixed(2);
+  let s=`<svg class="mbchart" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" font-family="Carlito,Calibri,sans-serif">`;
+  s+=`<text x="${L+pw/2}" y="15" font-size="10.5" font-weight="700" fill="#000" text-anchor="middle">CENTRE OF GRAVITY LIMITS</text>`;
+  s+=`<rect x="${L}" y="${Tp}" width="${pw}" height="${ph}" fill="#fff"/>`;
+  // minor grid: half inch, 50 lbs; major grid: 1 inch, 100 lbs
+  for(let x=c.x0;x<=c.x1+1e-9;x+=.5)s+=`<line x1="${f(X(x))}" y1="${Tp}" x2="${f(X(x))}" y2="${Tp+ph}" stroke="${Math.abs(x-Math.round(x))<1e-9?'#c8c8c8':'#ececec'}" stroke-width=".6"/>`;
+  for(let y=c.y0;y<=c.y1+1e-9;y+=50)s+=`<line x1="${L}" y1="${f(Y(y))}" x2="${L+pw}" y2="${f(Y(y))}" stroke="${y%100?'#ececec':'#c8c8c8'}" stroke-width=".6"/>`;
+  // envelope
+  const env=T.env.map(p=>`${f(X(p[0]))},${f(Y(p[1]))}`).join(' ');
+  s+=`<polygon points="${env}" fill="#dde8f5" fill-opacity=".85" stroke="#1f5fa8" stroke-width="1.6" stroke-linejoin="round"/>`;
+  s+=`<rect x="${L}" y="${Tp}" width="${pw}" height="${ph}" fill="none" stroke="#7f7f7f" stroke-width=".8"/>`;
+  for(let x=c.x0;x<=c.x1+1e-9;x+=1)s+=`<text x="${f(X(x))}" y="${Tp+ph+11}" font-size="8.5" fill="#333" text-anchor="middle">${x}</text>`;
+  for(let y=c.y0;y<=c.y1+1e-9;y+=100)s+=`<text x="${L-5}" y="${f(Y(y)+3)}" font-size="8.5" fill="#333" text-anchor="end">${y}</text>`;
+  s+=`<text x="${L+pw/2}" y="${H-8}" font-size="9" fill="#333" text-anchor="middle">CG location, inches aft of datum</text>`;
+  s+=`<text transform="translate(11 ${Tp+ph/2}) rotate(-90)" font-size="9" fill="#333" text-anchor="middle">Loaded weight, lbs</text>`;
+  // points: the take-off to landing line shows the fuel burn
+  s+=`<clipPath id="pc-${T.label}"><rect x="${L-10}" y="${Tp-10}" width="${pw+20}" height="${ph+20}"/></clipPath><g clip-path="url(#pc-${T.label})">`;
+  const P=k=>{const p=R.pts[k];return p&&isFinite(p.x)&&isFinite(p.y)?{...p,px:X(p.x),py:Y(p.y),col:p.ok?'#000':'#c00000'}:null};
+  const tow=P('tow'),ldw=P('ldw'),zfw=P('zfw');
+  if(tow&&ldw)s+=`<line x1="${f(tow.px)}" y1="${f(tow.py)}" x2="${f(ldw.px)}" y2="${f(ldw.py)}" stroke="#000" stroke-width=".9" stroke-dasharray="2.5 2"/>`;
+  const lab=(p,dx,dy,anchor)=>`<text x="${f(p.px+dx)}" y="${f(p.py+dy)}" font-size="8.5" font-weight="700" fill="${p.col}" text-anchor="${anchor}" paint-order="stroke" stroke="#fff" stroke-width="2.4" stroke-linejoin="round">${p.name}</text>`;
+  if(zfw)s+=`<path d="M${f(zfw.px-3)} ${f(zfw.py-3)}L${f(zfw.px+3)} ${f(zfw.py+3)}M${f(zfw.px-3)} ${f(zfw.py+3)}L${f(zfw.px+3)} ${f(zfw.py-3)}" stroke="${zfw.col}" stroke-width="1.4"/>`+lab(zfw,-6,9,'end');
+  if(ldw)s+=`<circle cx="${f(ldw.px)}" cy="${f(ldw.py)}" r="2.8" fill="#fff" stroke="${ldw.col}" stroke-width="1.4"/>`+lab(ldw,6,9,'start');
+  if(tow)s+=`<circle cx="${f(tow.px)}" cy="${f(tow.py)}" r="3" fill="${tow.col}"/>`+lab(tow,6,-4,'start');
   s+='</g></svg>';
   return s;
 }
@@ -865,15 +872,39 @@ function buildBack(R){
     <div class="bar">${esc(club?club+' ':'')}FLIGHT BRIEFING</div>
     <div class="info"><div><div class="lab">Aircraft</div><div class="big">${esc(ac?ac.cs:'')}</div></div><div><div class="lab">Date</div><div class="big">${esc(dof(S.date))}</div></div></div>
     <div class="sec"><div class="lab">NOTAM <span>${nI}</span></div><div class="txt">${esc(S.notam||'')}</div></div>
-    <div class="sec"><div class="lab">METAR <span>${wI}</span></div><div class="txt mono">${esc(S.metar||'')}</div></div>
-    <div class="sec"><div class="lab">TAF <span>${wI}</span></div><div class="txt mono">${esc(S.taf||'')}</div></div>
+    <div class="sec"><div class="lab">METAR <span>${wI}</span></div><div class="txt">${esc(S.metar||'')}</div></div>
+    <div class="sec"><div class="lab">TAF <span>${wI}</span></div><div class="txt">${esc(S.taf||'')}</div></div>
     <div class="sec grow"><div class="lab">Briefing</div><div class="txt">${lines.map(l=>'–  '+esc(l)).join('\n')}</div></div>
   </div></div>`;
   return el;
 }
+// fields that are normally filled before flight; empty ones are marked (not required: they may be written by hand)
+const TODO={
+  mb:[['pic','PIC'],['student','Student pilot'],['dest','DEST'],['mcs','Call sign',()=>S.callsign==='__manual__'],['mbew','Empty weight',()=>S.callsign==='__manual__'],['marm','Arm',()=>S.callsign==='__manual__']],
+  nav:[['n_dest','DEST'],['n_alt','Alternate'],['n_spd','Cruise speed'],['n_crzalt','Cruise altitude'],['[data-n="l0_wp"]','Departure waypoint'],['[data-n="l1_wp"]','First waypoint'],
+       ['[data-n="ftrip"]','Trip fuel'],['[data-n="fres"]','Reserve fuel'],['[data-n="ftot"]','Total fuel'],['[data-n="p_tor1"]','TOR'],['[data-n="p_todr1"]','TODR'],['[data-n="p_ldr1"]','LDR']],
+  back:[['notam','NOTAM'],['metar','METAR'],['taf','TAF'],['briefing','Briefing']]
+};
+function markTodo(){
+  const cur=(document.querySelector('.tab[aria-selected="true"]')||{}).dataset?.tab; let here=[];
+  for(const [tab,list] of Object.entries(TODO)){
+    const miss=[];
+    for(const [sel,name,when] of list){
+      const el=sel[0]==='['?document.querySelector(sel):$(sel); if(!el)continue;
+      const need=!when||when(), empty=need&&!el.value.trim();
+      el.classList.toggle('todo',empty); if(empty)miss.push(name);
+    }
+    const t=document.querySelector(`.tab[data-tab="${tab}"]`);
+    let c=t.querySelector('.cnt'); if(!c){c=document.createElement('span');c.className='cnt';t.appendChild(c)}
+    c.textContent=miss.length||''; c.hidden=!miss.length; c.title=miss.length?'Still empty: '+miss.join(', '):'';
+    if(tab===cur)here=miss;
+  }
+  const line=$('todoLine'); line.hidden=!here.length;
+  line.innerHTML=here.length?`<span aria-hidden="true">●</span><span><b>Still empty:</b> ${esc(here.join(', '))}. Fine to leave if you write them by hand.</span>`:'';
+}
 function fitBack(){
   for(const b of document.querySelectorAll('.back')){
-    let fs=10; b.style.setProperty('--fs',fs);
+    let fs=9; b.style.setProperty('--fs',fs);
     while(fs>6 && b.scrollHeight>b.clientHeight+1){fs-=.25;b.style.setProperty('--fs',fs)}
   }
 }
@@ -884,7 +915,7 @@ function render(){
   R=compute();
   const host=document.getElementById('sheets');
   host.replaceChildren(buildFront(R),buildBack(R));
-  fitBack(); renderSummary(); renderWind(); renderWxAge(); fitPreview();
+  fitBack(); renderSummary(); renderWind(); renderWxAge(); markTodo(); fitPreview();
 }
 function renderSummary(){
   const T=R.T, rows=[['zfw','Zero fuel'],['ramp','Ramp'],['tow','Take-off'],['ldw','Landing']];
@@ -1032,6 +1063,7 @@ $('datePick').addEventListener('change',e=>{if(e.target.value){S.date=e.target.v
 for(const t of document.querySelectorAll('.tab')) t.onclick=()=>{
   for(const x of document.querySelectorAll('.tab')) x.setAttribute('aria-selected',x===t);
   for(const p of document.querySelectorAll('.pane')) p.classList.toggle('on',p.id==='pane-'+t.dataset.tab);
+  markTodo();
 };
 
 // aircraft save (manual entry -> fleet)

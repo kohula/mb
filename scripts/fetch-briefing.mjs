@@ -10,7 +10,11 @@ const UA = { 'user-agent': 'mb-sheet-briefing/1.0 (+GitHub Actions)' };
 
 async function get(url, opt = {}) {
   const r = await fetch(url, { ...opt, headers: { ...UA, ...(opt.headers || {}) }, signal: AbortSignal.timeout(30000) });
-  if (!r.ok) throw new Error(`${new URL(url).host} HTTP ${r.status}`);
+  if (!r.ok) {
+    // include the service's short error code (e.g. invalid_client), never the request itself
+    let why = ''; try { const t = (await r.text()).slice(0, 300); const j = JSON.parse(t); why = j.error_description || j.error || j.message || ''; } catch {}
+    throw new Error(`${new URL(url).host}${new URL(url).pathname} HTTP ${r.status}${why ? ' (' + String(why).slice(0, 120) + ')' : ''}`);
+  }
   return r.text();
 }
 const decode = h => h.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")

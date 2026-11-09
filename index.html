@@ -1262,7 +1262,7 @@ const SRC={
     {name:'aviationweather.gov (relay)',fn:async()=>rawFrom(await relay(`${AW}taf?ids=${icao}&format=raw`))}],
   notam:icao=>[
     {name:'your server',fn:async()=>await getText(serverUrl('notam',icao))},
-    {name:'site briefing data',fn:()=>siteField(icao,'notam','notamUpdated',24)},
+    {name:'site briefing data',fn:()=>siteField(icao,'notam','notamUpdated',72)},
     {name:'FAA NOTAM service (relay)',fn:async()=>parseNotams(await relay(DINS(icao)))}]
 };
 const seq={wx:0,notam:0}; let lastWx=0, lastNotam=0;
@@ -1295,7 +1295,8 @@ async function lookup(which,auto){
         const r=await chain(SRC.notam(nt));
         if(my!==seq.notam||(auto&&notamHand))return;
         S.notam=r.text; notamHand=false;
-        set('notamStatus',r.text?`${nt} loaded at ${stamp()} via ${r.src}.`:`No active NOTAMs found for ${nt} (${r.src}).`);
+        let when=''; if(r.src==='site briefing data'){try{const d=await siteData(nt),t=new Date(d.notamUpdated);if(isFinite(t)){const h=(Date.now()-t)/36e5;when=` NOTAMs fetched ${dmy(t.toISOString().slice(0,10))} ${pad(t.getUTCHours())}:${pad(t.getUTCMinutes())} UTC${h>30?', more than a day old: check for newer ones before flight':''}.`}}catch(x){}}
+        set('notamStatus',r.text?`${nt} loaded at ${stamp()} via ${r.src}.${when}`:`No active NOTAMs found for ${nt} (${r.src}).`);
       }catch(e){
         if(my!==seq.notam||auto)return;
         let why=''; try{const d=await siteData(nt); if(d&&d.notamError)why=' '+d.notamError}catch(x){}

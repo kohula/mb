@@ -6,6 +6,7 @@
     "LHBS",
     "LHBP"
   ],
+  "notamRefreshHours": 24,
   "runways": "LHBS 09/27\nLHBP 13L/31R 13R/31L",
   "xwC172": 15,
   "xwC152": 12,

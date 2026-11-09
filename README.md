@@ -22,7 +22,7 @@ The **Settings** tab holds everything that is not about one flight, saved in the
 
 Browsers are not allowed to call the official NOTAM and weather services directly, so:
 
-- **`.github/workflows/briefing.yml`** runs every 30 minutes, fetches METAR and TAF (aviationweather.gov) and NOTAMs for `home`, `wxIcao` and `lookupIcaos` from `config.json`, and commits them to `data/ICAO.json`. The page reads those files first. In a fork, open the **Actions** tab and enable workflows once; you can run it by hand with **Run workflow**.
+- **`.github/workflows/briefing.yml`** runs every 30 minutes and fetches METAR and TAF (aviationweather.gov); NOTAMs are fetched once a day (`notamRefreshHours` in `config.json`, default 24) or whenever you press **Run workflow**. It covers `home`, `wxIcao` and `lookupIcaos` from `config.json` and commits the results to `data/ICAO.json`. The page reads those files first. In a fork, open the **Actions** tab and enable workflows once; you can run it by hand with **Run workflow**.
 - **NOTAMs need a free [autorouter.aero](https://www.autorouter.aero) account** (European NOTAMs). Register, then in the repository go to Settings > Secrets and variables > Actions and add two repository secrets: `AUTOROUTER_USER` (the account e-mail) and `AUTOROUTER_PASS` (its password). The FAA services are tried as a fallback but block GitHub's servers.
 - METAR and TAF also come live from public CORS-enabled sources (metar.vatsim.net, datamask.org, metars.eu).
 - `worker.js` is an optional Cloudflare Worker for your own lookup server (see the comments at the top); put its URL in Settings > NOTAM and weather lookup.

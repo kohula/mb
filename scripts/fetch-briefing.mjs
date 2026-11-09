@@ -6,6 +6,10 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 const cfg = JSON.parse(await readFile('config.json', 'utf8'));
 const icaos = [...new Set([cfg.home, cfg.wxIcao, ...(cfg.lookupIcaos || [])]
   .filter(Boolean).map(s => String(s).trim().toUpperCase()).filter(s => /^[A-Z0-9]{4}$/.test(s)))];
+// NOTAMs are fetched again only when the saved ones are older than this (config.json "notamRefreshHours",
+// default 24), or when the job is started by hand (Actions > Run workflow), which always fetches fresh ones.
+const notamHours = Number(cfg.notamRefreshHours) > 0 ? Number(cfg.notamRefreshHours) : 24;
+const forceNotams = process.env.GITHUB_EVENT_NAME === 'workflow_dispatch';
 const UA = { 'user-agent': 'mb-sheet-briefing/1.0 (+GitHub Actions)' };
 
 async function get(url, opt = {}) {
@@ -118,6 +122,12 @@ for (const icao of icaos) {
     d.metar = m.trim(); d.taf = t.trim().replace(/[ \t]*\n[ \t]*/g, '\n'); d.wxUpdated = now;
   } catch (e) { failures++; console.error(icao, 'weather:', e.message); }
   try { d.runways = await runways(icao); } catch (e) { console.error(icao, 'runways:', e.message); }
+  const age = (Date.now() - Date.parse(prev.notamUpdated || 0)) / 36e5;
+  if (prev.notamOk && !forceNotams && age < notamHours) {
+    console.log(icao, `runways ${d.runways ? d.runways.ids.join(' ') || 'none' : '-'}, metar ${d.metar ? 'ok' : '-'}, taf ${d.taf ? 'ok' : '-'}, notams kept from ${prev.notamUpdated} (${age.toFixed(1)} h old)`);
+    await writeFile(file, JSON.stringify(d, null, 1) + '\n');
+    continue;
+  }
   let list = null; const errs = [];
   for (const [name, fn] of [['autorouter.aero', autorouterNotams], ['FAA NOTAM Search', faaNotams], ['FAA DINS', dinsNotams]]) {
     try { list = await fn(icao); d.notamSource = name; break; } catch (e) { console.error(icao, name + ':', e.message); errs.push(name + ': ' + e.message); }

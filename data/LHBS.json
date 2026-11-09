@@ -2,7 +2,7 @@
  "icao": "LHBS",
  "metar": "",
  "taf": "",
- "wxUpdated": "2026-11-08T19:39:13.224Z",
+ "wxUpdated": "2026-11-09T06:11:25.309Z",
  "runways": {
   "ends": [
    {
@@ -19,5 +19,5 @@
   ]
  },
  "notamError": "NOTAM source not set up yet: add the AUTOROUTER_USER and AUTOROUTER_PASS secrets (see README).",
- "notamErrorAt": "2026-11-08T19:39:13.224Z"
+ "notamErrorAt": "2026-11-09T06:11:25.309Z"
 }

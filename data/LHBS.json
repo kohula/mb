@@ -2,7 +2,7 @@
  "icao": "LHBS",
  "metar": "",
  "taf": "",
- "wxUpdated": "2026-11-09T06:11:25.309Z",
+ "wxUpdated": "2026-11-09T07:10:10.337Z",
  "runways": {
   "ends": [
    {
@@ -18,6 +18,6 @@
    "09/27"
   ]
  },
- "notamError": "NOTAM source not set up yet: add the AUTOROUTER_USER and AUTOROUTER_PASS secrets (see README).",
- "notamErrorAt": "2026-11-09T06:11:25.309Z"
+ "notamError": "NOTAM sources failed: autorouter.aero: api.autorouter.aero HTTP 403; FAA NOTAM Search: notams.aim.faa.gov HTTP 403; FAA DINS: fetch failed",
+ "notamErrorAt": "2026-11-09T07:10:10.337Z"
 }

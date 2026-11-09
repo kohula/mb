@@ -1,8 +1,8 @@
 {
  "icao": "LHBP",
- "metar": "METAR LHBP 090600Z VRB02KT 8000 -RA NSC 03/01 Q1026 NOSIG",
+ "metar": "METAR LHBP 090700Z 08004KT 040V100 9999 FEW042 BKN078 03/01 Q1026 NOSIG",
  "taf": "TAF LHBP 090515Z 0906/1006 VRB03KT CAVOK\nTEMPO 0906/0912 -SHRA BKN030 OVC055\nBECMG 0922/1002 10007KT 6000 BKN014 OVC025\nBECMG 1002/1006 4000 -RA BR BKN008 OVC020",
- "wxUpdated": "2026-11-09T06:11:26.663Z",
+ "wxUpdated": "2026-11-09T07:10:12.074Z",
  "runways": {
   "ends": [
    {
@@ -27,6 +27,6 @@
    "13R/31L"
   ]
  },
- "notamError": "NOTAM source not set up yet: add the AUTOROUTER_USER and AUTOROUTER_PASS secrets (see README).",
- "notamErrorAt": "2026-11-09T06:11:26.663Z"
+ "notamError": "NOTAM sources failed: autorouter.aero: api.autorouter.aero HTTP 403; FAA NOTAM Search: notams.aim.faa.gov HTTP 403; FAA DINS: fetch failed",
+ "notamErrorAt": "2026-11-09T07:10:12.074Z"
 }

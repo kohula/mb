@@ -1,8 +1,8 @@
 {
  "icao": "LHBP",
- "metar": "METAR LHBP 132330Z 31015KT CAVOK 04/01 Q1016 NOSIG",
- "taf": "TAF LHBP 132315Z 1400/1424 31008KT CAVOK\nBECMG 1414/1417 VRB03KT\nBECMG 1421/1424 5000 BR",
- "wxUpdated": "2026-11-13T23:50:51.316Z",
+ "metar": "METAR LHBP 140600Z 30005KT CAVOK 02/M01 Q1020 NOSIG",
+ "taf": "TAF LHBP 140515Z 1406/1506 VRB02KT CAVOK\nBECMG 1406/1409 31007KT\nBECMG 1413/1416 VRB02KT\nBECMG 1420/1423 5000 BR\nBECMG 1423/1501 1500 BCFG\nBECMG 1501/1504 08005KT 0300 FZFG VV001",
+ "wxUpdated": "2026-11-14T06:10:09.978Z",
  "runways": {
   "ends": [
    {
@@ -28,5 +28,5 @@
   ]
  },
  "notamError": "NOTAM sources failed: autorouter.aero: api.autorouter.aero/v1.0/oauth2/token HTTP 403 (Your account does not have API access privileges.); FAA NOTAM Search: notams.aim.faa.gov/notamSearch/search HTTP 403; FAA DINS: fetch failed",
- "notamErrorAt": "2026-11-13T23:50:51.316Z"
+ "notamErrorAt": "2026-11-14T06:10:09.978Z"
 }

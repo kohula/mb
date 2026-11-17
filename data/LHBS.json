@@ -2,7 +2,7 @@
  "icao": "LHBS",
  "metar": "",
  "taf": "",
- "wxUpdated": "2026-11-17T02:54:05.124Z",
+ "wxUpdated": "2026-11-17T11:43:32.296Z",
  "runways": {
   "ends": [
    {
@@ -19,5 +19,5 @@
   ]
  },
  "notamError": "NOTAM sources failed: autorouter.aero: api.autorouter.aero/v1.0/oauth2/token HTTP 403 (Your account does not have API access privileges.); FAA NOTAM Search: notams.aim.faa.gov/notamSearch/search HTTP 403; FAA DINS: fetch failed",
- "notamErrorAt": "2026-11-17T02:54:05.124Z"
+ "notamErrorAt": "2026-11-17T11:43:32.296Z"
 }

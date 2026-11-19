@@ -86,6 +86,8 @@ h2{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mu
 .calc{width:100%;border-collapse:collapse;font-size:.88rem;font-variant-numeric:tabular-nums}
 .calc th,.calc td{padding:.3rem .4rem;border-bottom:1px solid var(--line);text-align:right}
 .calc th:first-child,.calc td:first-child{text-align:left}
+.calc td small.mg{display:block;font-size:.72rem;color:var(--muted);font-weight:500;white-space:nowrap}
+.calc td small.mg.tight{color:var(--todo)}.calc td small.mg.over{color:var(--warn);font-weight:700}
 .calc th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
 .badge{display:inline-block;padding:.05rem .45rem;border-radius:99px;font-size:.75rem;font-weight:700}
 .badge.ok{background:var(--ok-bg);color:var(--ok)} .badge.bad{background:var(--warn-bg);color:var(--warn)}
@@ -292,11 +294,13 @@ code{font-size:.9em;background:var(--field);border:1px solid var(--line);border-
         <div class="row" style="gap:10px">
           <div class="seg" role="radiogroup" aria-label="Fuel mode">
             <label><input type="radio" name="fmode" value="rounds" data-k="fmode"> From rounds</label>
+            <label><input type="radio" name="fmode" value="time" data-k="fmode"> From flight time</label>
             <label><input type="radio" name="fmode" value="manual" data-k="fmode"> Manual</label>
           </div>
           <div class="seg" role="radiogroup" aria-label="Round length" id="rlenSeg"></div>
         </div>
         <div class="grid" style="margin-top:10px;grid-template-columns:repeat(auto-fit,minmax(165px,1fr))">
+          <label class="f" id="wTime" hidden>Flight time (h:mm) <input id="ftime" data-k="ftime" inputmode="numeric" placeholder="0:45" autocomplete="off"></label>
           <label class="f" id="wRounds">Rounds today (incl. yours) <input id="rounds" data-k="rounds" type="number" min="0" max="20" step="1" inputmode="numeric"></label>
           <label class="f">Usable fuel
             <span class="row" style="gap:6px;flex-wrap:nowrap"><input id="mfuel" data-k="mfuel" inputmode="decimal" style="flex:1"><select id="mfuelU" data-k="mfuelU" style="width:5em;flex:none" aria-label="Unit"><option value="gal">gal</option><option value="l">l</option><option value="lbs">lbs</option></select></span></label>
@@ -423,7 +427,7 @@ code{font-size:.9em;background:var(--field);border:1px solid var(--line);border-
           <label class="f">C152 burn (US gal/h) <input data-s="burnC152" inputmode="decimal"></label>
           <label class="f">Final reserve (min) <input data-s="resMin" inputmode="decimal"></label>
         </div>
-        <p class="hint">Fuel from rounds = (rounds today + reserve rounds) × fuel per round; trip fuel is one round. Burn and final reserve are only used for the endurance line.</p>
+        <p class="hint">Fuel from rounds = (rounds today + reserve rounds) × fuel per round; trip fuel is one round. Burn is used for trip fuel from flight time and the endurance line; the final reserve only for the endurance line.</p>
       </details>
 
       <details class="card set">
@@ -527,7 +531,7 @@ const aircraftList=()=>CFG.fleet;
 const roundList=()=>CFG.rounds.filter(r=>num(r.min)!=null&&num(r.gal)!=null);
 
 function flightDefaults(){
-  return {type:'C172',callsign:'',date:today(),pic:'',student:'',dep:CFG.home,dest:'',mcs:'',mbew:'',marm:'',mmom:'',
+  return {ftime:'',type:'C172',callsign:'',date:today(),pic:'',student:'',dep:CFG.home,dest:'',mcs:'',mbew:'',marm:'',mmom:'',
     load:'2',mFront:'',mRear:'',oBag1:'',oBag2:'',fmode:'rounds',rlen:String((roundList()[0]||{}).min||''),rounds:'4',
     mfuel:'',mfuelU:'gal',mtrip:'',mtripU:'gal',useListed:false,
     notamIcao:CFG.home,notam:'',wxIcao:CFG.wxIcao,metar:'',taf:'',rwy:'',briefing:'',nav:{}};
@@ -587,8 +591,19 @@ function presets(){
 }
 const toGal=(v,u,T)=>v==null?null:u==='lbs'?v/T.den:u==='l'?v/L_PER_GAL:v;
 const fromGal=(g,u,T)=>u==='lbs'?g*T.den:u==='l'?g*L_PER_GAL:g;
+// "1:30", "0:45" or plain minutes ("45") -> minutes
+function parseFlightTime(t){
+  t=String(t||'').trim(); let m=/^(\d{1,2})[:.h ]\s*(\d{1,2})\s*(?:min)?$/i.exec(t);
+  if(m&&+m[2]<60)return +m[1]*60+ +m[2];
+  m=/^(\d{1,3})\s*(?:min)?$/i.exec(t); return m?+m[1]:null;
+}
 function fuelPresets(T){
   if(S.fmode==='manual')return {gal:null,trip:null};
+  if(S.fmode==='time'){
+    // trip = flight time x burn rate from Settings; the fuel on board is typed in
+    const min=parseFlightTime(S.ftime), burn=num(CFG['burn'+S.type]);
+    return {gal:null, trip:min!=null&&burn>0?min/60*burn:null};
+  }
   const rl=roundList(), rd=rl.find(r=>String(r.min)===String(S.rlen))||rl[0]||{min:0,gal:0};
   const g=num(rd.gal)??0, n=num(S.rounds)??0, res=num(CFG.resRounds)??0;
   return {gal:(n+res)*g, trip:g};
@@ -636,7 +651,7 @@ function compute(){
   const FP=fuelPresets(T);
   let gal=toGal(num(S.mfuel),S.mfuelU,T)??FP.gal, tripGal=toGal(num(S.mtrip),S.mtripU,T)??FP.trip;
   if(gal==null){R.warn.push('Enter the usable fuel on board.');gal=0}
-  if(tripGal==null){R.warn.push('Enter the trip fuel for this flight.');tripGal=0}
+  if(tripGal==null){R.warn.push(S.fmode==='time'?'Enter the flight time (h:mm) or the trip fuel.':'Enter the trip fuel for this flight.');tripGal=0}
   R.gal=gal; R.tripGal=tripGal;
   add('fuel',gal*T.den,T.armFuel);
   const rw=zw+R.rows.fuel.w, rm=zm+R.rows.fuel.mom;
@@ -1028,11 +1043,23 @@ function render(){
 function renderSummary(){
   const T=R.T, rows=[['zfw','Zero fuel'],['ramp','Ramp'],['tow','Take-off'],['ldw','Landing']];
   const mx={ramp:T.maxRamp,tow:T.maxTOW,ldw:T.maxLDW};
+  // CG limits at a weight: where a horizontal line at that weight crosses the envelope
+  const cgRange=w=>{const xs=[];const E=T.env;for(let i=0;i<E.length;i++){const [x1,y1]=E[i],[x2,y2]=E[(i+1)%E.length];
+    if((w>=Math.min(y1,y2)&&w<=Math.max(y1,y2))&&y1!==y2)xs.push(x1+(w-y1)*(x2-x1)/(y2-y1)); else if(y1===y2&&Math.abs(w-y1)<1e-9)xs.push(x1,x2)}
+    return xs.length?[Math.min(...xs),Math.max(...xs)]:null};
   let h='<tr><th></th><th>Weight lbs</th><th>Arm in</th><th>Moment</th><th>Limits</th></tr>';
   for(const [k,n] of rows){
     const r=R.rows[k]; const p=R.pts[k];
     let ok=true; if(mx[k]&&r.w>mx[k])ok=false; if(p&&!p.ok)ok=false;
-    h+=`<tr><td>${n}</td><td>${fw(r.w)}</td><td>${isFinite(r.arm)?fa(r.arm):'–'}</td><td>${isFinite(r.mom)?fm(r.mom):'–'}</td><td><span class="badge ${ok?'ok':'bad'}">${ok?'OK':'Check'}</span></td></tr>`;
+    const wm=mx[k]&&isFinite(r.w)?mx[k]-r.w:null;
+    const wTxt=wm==null?'':`<small class="mg${wm<0?' over':wm<50?' tight':''}">${wm>=0?fw(wm)+' under max':fw(-wm)+' over max'}</small>`;
+    let cTxt='';
+    if(isFinite(r.arm)&&isFinite(r.w)){const rg=cgRange(r.w);
+      if(!rg)cTxt='<small class="mg over">weight outside chart</small>';
+      else{const fwd=r.arm-rg[0], aft=rg[1]-r.arm;
+        cTxt=fwd<0||aft<0?`<small class="mg over">${fa(Math.max(-fwd,-aft))} in ${fwd<0?'fwd of fwd':'aft of aft'} limit</small>`
+          :`<small class="mg${Math.min(fwd,aft)<1?' tight':''}">${fa(Math.min(fwd,aft))} in to ${fwd<=aft?'fwd':'aft'} limit</small>`}}
+    h+=`<tr><td>${n}</td><td>${fw(r.w)}${wTxt}</td><td>${isFinite(r.arm)?fa(r.arm):'–'}${cTxt}</td><td>${isFinite(r.mom)?fm(r.mom):'–'}</td><td><span class="badge ${ok?'ok':'bad'}">${ok?'OK':'Check'}</span></td></tr>`;
   }
   document.getElementById('calcTable').innerHTML=h;
   document.getElementById('alerts').innerHTML=R.warn.map(w=>`<div class="alert">${esc(w)}</div>`).join('');
@@ -1100,7 +1127,9 @@ function syncControls(){
   if(!rl.some(r=>String(r.min)===String(S.rlen))&&rl.length)S.rlen=String(rl[0].min);
   $('rlenSeg').innerHTML=rl.map(r=>`<label><input type="radio" name="rlen" value="${esc(r.min)}" data-k="rlen"${String(r.min)===String(S.rlen)?' checked':''}> ${esc(r.min)} min</label>`).join('');
   const rounds=S.fmode==='rounds', FP=fuelPresets(T);
-  $('rlenSeg').hidden=!rounds; $('wRounds').hidden=!rounds;
+  $('rlenSeg').hidden=!rounds; $('wRounds').hidden=!rounds; $('wTime').hidden=S.fmode!=='time';
+  { const e=$('ftime'), bad=S.fmode==='time'&&(S.ftime||'').trim()!==''&&parseFlightTime(S.ftime)==null; e.classList.toggle('bad',bad);
+    e.title=`Trip fuel = flight time × ${num(CFG['burn'+S.type])??'?'} gal/h (${T.label} burn in Settings)`; }
   $('mfuel').placeholder=FP.gal==null?'':String(+fmt(fromGal(FP.gal,S.mfuelU,T),1));
   $('mtrip').placeholder=FP.trip==null?'':String(+fmt(fromGal(FP.trip,S.mtripU,T),1));
   loadRunways(S.dep); loadRunways(S.wxIcao);
@@ -1133,7 +1162,7 @@ document.addEventListener('input',e=>{
     if(k==='callsign'||k==='type'){S.useListed=false}
     if(k==='metar'||k==='taf')wxHand=true; if(k==='notam')notamHand=true;
     save();
-    if(['type','callsign','fmode','load','rlen','rounds','mfuelU','mtripU','dep','rwy','wxIcao'].includes(k))syncControls();
+    if(['type','callsign','fmode','load','rlen','rounds','ftime','mfuelU','mtripU','dep','rwy','wxIcao'].includes(k))syncControls();
     render(); navPlaceholders();
     if(k==='wxIcao'){wxHand=false;lookupSoon('wx')} if(k==='notamIcao'){notamHand=false;lookupSoon('notam')}
   } else if(el.dataset&&el.dataset.n){

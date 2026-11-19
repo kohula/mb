@@ -4,7 +4,12 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 
 const cfg = JSON.parse(await readFile('config.json', 'utf8'));
-const icaos = [...new Set([cfg.home, cfg.wxIcao, ...(cfg.lookupIcaos || [])]
+// Airfields: the ones in config.json, every airfield already saved in data/, and any typed into the
+// "Run workflow" form on GitHub (input "icaos", e.g. "LHTL LHKV"). New ones are saved and kept from then on.
+let saved = [];
+try { saved = (await (await import('node:fs/promises')).readdir('data')).filter(f => /^[A-Z0-9]{4}\.json$/.test(f)).map(f => f.slice(0, 4)); } catch {}
+const typed = String(process.env.EXTRA_ICAOS || '').toUpperCase().split(/[^A-Z0-9]+/);
+const icaos = [...new Set([cfg.home, cfg.wxIcao, ...(cfg.lookupIcaos || []), ...saved, ...typed]
   .filter(Boolean).map(s => String(s).trim().toUpperCase()).filter(s => /^[A-Z0-9]{4}$/.test(s)))];
 // NOTAMs are only fetched when the job is started by hand (Actions > Run workflow), to stay well inside the
 // API limits; scheduled runs keep the saved ones. Optional: config.json "notamRefreshHours" > 0 also refreshes

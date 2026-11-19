@@ -2,7 +2,7 @@
  "icao": "LHBS",
  "metar": "",
  "taf": "",
- "wxUpdated": "2026-11-19T09:28:31.159Z",
+ "wxUpdated": "2026-11-19T15:06:08.755Z",
  "runways": {
   "ends": [
    {
@@ -18,6 +18,9 @@
    "09/27"
   ]
  },
- "notamError": "NOTAM sources failed: autorouter.aero: api.autorouter.aero/v1.0/oauth2/token HTTP 403 (Your account does not have API access privileges.); FAA NOTAM Search: notams.aim.faa.gov/notamSearch/search HTTP 403; FAA DINS: fetch failed",
- "notamErrorAt": "2026-11-19T09:28:31.159Z"
+ "notamErrorAt": "2026-11-19T09:28:31.159Z",
+ "notamSource": "autorouter.aero",
+ "notam": "B0711/26 NOTAMR\nA) LHBS B) 2609010630 C) 2612011400 EST\nE) OBSTACLE ERECTED WEST FROM THE AIRPORT, IN LINE OF EXTENDED \nCENTERLINE OF RWY, 1560M WEST FROM THR RWY 27. HEIGHT OF THE \nOBSTACLE IS MAX 40M AGL. PSN OF THE OBSTACLE IS 472708N 0185758E.",
+ "notamOk": true,
+ "notamUpdated": "2026-11-19T15:06:08.755Z"
 }
